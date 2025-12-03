@@ -1,5 +1,6 @@
 // src/types/customer.ts
 export type CustomerType = "company" | "private";
+export type CustomerStatus = "active" | "inactive";
 
 export interface Customer {
   id?: string; // Firestore-Dokument-ID
@@ -18,10 +19,22 @@ export interface Customer {
   city?: string;
   country?: string;
 
- // Kontakt
+  // Kontakt
   email?: string;
   phone?: string;
 
-  createdAt: number;
-  updatedAt: number;
+  // Aktivitäts-Status (aktiv / inaktiv)
+  status?: CustomerStatus;
+
+  /**
+   * Unix-Timestamp (ms) der Erstellung.
+   * Wird von createCustomer gesetzt.
+   */
+  createdAt?: number;
+
+  /**
+   * Unix-Timestamp (ms) der letzten Änderung.
+   * Wird von createCustomer / updateCustomer gesetzt.
+   */
+  updatedAt?: number;
 }

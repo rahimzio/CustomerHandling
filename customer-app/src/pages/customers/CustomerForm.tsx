@@ -1,58 +1,55 @@
-// src/components/customers/CustomerForm.tsx
-import { useState } from "react";
-import type { Customer, CustomerType } from "../../types/customer";
-import { Label } from "@radix-ui/react-label";
+// src/pages/customers/CustomerForm.tsx
+import { useState, type FormEvent } from "react";
+import type {
+  Customer,
+  CustomerStatus,
+  CustomerType,
+} from "../../types/customer";
 import { Input } from "../../components/ui/input";
 import { Button } from "../../components/ui/button";
 
-type Props = {
-  initial?: Partial<Customer>;
+interface CustomerFormProps {
+  initial: Partial<Customer>;
   onSubmit: (data: Partial<Customer>) => Promise<void> | void;
-  submitLabel?: string;
-};
+  submitLabel: string;
+  isEdit: boolean;
+}
 
 export function CustomerForm({
-  initial = {},
+  initial,
   onSubmit,
-  submitLabel = "Speichern",
-}: Props) {
-  const [type, setType] = useState<CustomerType>(initial.type ?? "private");
+  submitLabel,
+  isEdit,
+}: CustomerFormProps) {
+  const [type, setType] = useState<CustomerType>(
+    (initial.type as CustomerType) ?? "private"
+  );
+
   const [firstName, setFirstName] = useState(initial.firstName ?? "");
   const [lastName, setLastName] = useState(initial.lastName ?? "");
-  const [companyName, setCompanyName] = useState(initial.companyName ?? "");
+  const [companyName, setCompanyName] = useState(
+    initial.companyName ?? ""
+  );
+
   const [street, setStreet] = useState(initial.street ?? "");
-  const [postalCode, setPostalCode] = useState(initial.postalCode ?? "");
+  const [postalCode, setPostalCode] = useState(
+    initial.postalCode ?? ""
+  );
   const [city, setCity] = useState(initial.city ?? "");
   const [country, setCountry] = useState(initial.country ?? "");
-  const [email, setEmail] = useState((initial as any).email ?? "");
-  const [phone, setPhone] = useState((initial as any).phone ?? "");
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const [email, setEmail] = useState(initial.email ?? "");
+  const [phone, setPhone] = useState(initial.phone ?? "");
+
+  const [status, setStatus] = useState<CustomerStatus>(
+    (initial.status as CustomerStatus) ?? "active"
+  );
+
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
-    const errors: string[] = [];
-
-    if (type === "private") {
-      if (!firstName) errors.push("Vorname ist erforderlich.");
-      if (!lastName) errors.push("Nachname ist erforderlich.");
-    }
-
-    if (type === "company") {
-      if (!companyName) errors.push("Unternehmensname ist erforderlich.");
-    }
-
-    const normalizedCountry = country.trim();
-    if (!normalizedCountry) {
-      errors.push("Land ist erforderlich.");
-    }
-
-    if (errors.length > 0) {
-      alert(errors.join("\n"));
-      console.warn("Formularvalidierung fehlgeschlagen:", errors);
-      return;
-    }
-
-    await onSubmit({
+    const data: Partial<Customer> = {
+      ...initial,
       type,
       firstName,
       lastName,
@@ -60,39 +57,51 @@ export function CustomerForm({
       street,
       postalCode,
       city,
-      country: normalizedCountry,
-      ...(email && { email }),
-      ...(phone && { phone }),
-    });
+      country,
+      email,
+      phone,
+    };
+
+    // Status nur explizit mitschicken, wenn es einen gibt:
+    // - im Edit-Modus (User kann ihn ändern)
+    // - oder initial bereits gesetzt war
+    if (isEdit || initial.status) {
+      data.status = status;
+    }
+
+    await onSubmit(data);
   };
 
+  const showPrivateFields = type === "private";
+  const showCompanyFields = type === "company";
+
   return (
-    <form
-      onSubmit={handleSubmit}
-      className="space-y-6 w-full max-w-xl"
-    >
-      {/* Kundentyp */}
-      <div className="space-y-1">
-        <Label>Kundentyp *</Label>
-        <div className="flex flex-wrap gap-3">
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Kundentyp-Toggle */}
+      <div className="space-y-2">
+        <div className="text-sm font-medium text-zinc-700">
+          Kundentyp *
+        </div>
+        <div className="flex gap-2">
           <button
             type="button"
             onClick={() => setType("private")}
-            className={`px-3 py-2 rounded-md border text-sm ${
+            className={`px-3 py-2 rounded-md border text-sm transition ${
               type === "private"
                 ? "border-beige-900 bg-beige-900 text-white"
-                : "border-zinc-200 bg-white"
+                : "border-zinc-200 bg-white text-zinc-400 hover:text-zinc-500"
             }`}
           >
             Privatperson
           </button>
+
           <button
             type="button"
             onClick={() => setType("company")}
-            className={`px-3 py-2 rounded-md border text-sm ${
+            className={`px-3 py-2 rounded-md border text-sm transition ${
               type === "company"
                 ? "border-beige-900 bg-beige-900 text-white"
-                : "border-zinc-200 bg-white"
+                : "border-zinc-200 bg-white text-zinc-400 hover:text-zinc-500"
             }`}
           >
             Unternehmen
@@ -100,89 +109,149 @@ export function CustomerForm({
         </div>
       </div>
 
-      {/* Name */}
-      {type === "private" ? (
+      {/* Status – nur im Edit-Modus anzeigen */}
+      {isEdit && (
+        <div className="space-y-2">
+          <div className="text-sm font-medium text-zinc-700">
+            Aktivitätsstatus
+          </div>
+          <div className="flex rounded-md border border-zinc-200 overflow-hidden w-fit">
+            <button
+              type="button"
+              onClick={() => setStatus("active")}
+              className={`px-3 py-2 text-sm transition ${
+                status === "active"
+                  ? "bg-beige-900 text-white"
+                  : "bg-white text-zinc-500 hover:bg-zinc-50"
+              }`}
+            >
+              Aktiv
+            </button>
+            <button
+              type="button"
+              onClick={() => setStatus("inactive")}
+              className={`px-3 py-2 text-sm transition border-l border-zinc-200 ${
+                status === "inactive"
+                  ? "bg-beige-900 text-white"
+                  : "bg-white text-zinc-500 hover:bg-zinc-50"
+              }`}
+            >
+              Inaktiv
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Felder für Privatperson */}
+      {showPrivateFields && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <Label>Vorname *</Label>
+            <label className="block text-sm font-medium text-zinc-700 mb-1">
+              Vorname *
+            </label>
             <Input
               value={firstName}
               onChange={(e) => setFirstName(e.target.value)}
+              placeholder="Max"
             />
           </div>
           <div>
-            <Label>Nachname *</Label>
+            <label className="block text-sm font-medium text-zinc-700 mb-1">
+              Nachname *
+            </label>
             <Input
               value={lastName}
               onChange={(e) => setLastName(e.target.value)}
+              placeholder="Mustermann"
             />
           </div>
         </div>
-      ) : (
-        <div>
-          <Label>Unternehmensname *</Label>
+      )}
+
+      {/* Felder für Unternehmen */}
+      {showCompanyFields && (
+        <div className="space-y-2">
+          <label className="block text-sm font-medium text-zinc-700 mb-1">
+            Firmenname *
+          </label>
           <Input
             value={companyName}
             onChange={(e) => setCompanyName(e.target.value)}
+            placeholder="Musterfirma GmbH"
           />
         </div>
       )}
 
-      {/* Adresse + Land */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <div>
-          <Label>Straße und Hausnummer</Label>
-          <Input value={street} onChange={(e) => setStreet(e.target.value)} />
-        </div>
-        <div>
-          <Label>Ort</Label>
-          <Input value={city} onChange={(e) => setCity(e.target.value)} />
-        </div>
-        <div>
-          <Label>PLZ</Label>
-          <Input
-            value={postalCode}
-            onChange={(e) => setPostalCode(e.target.value)}
-          />
-        </div>
-
-        <div>
-          <Label>Land *</Label>
-          <select
-            className="h-9 w-full rounded-md border border-zinc-700 bg-zinc-900 text-white px-3 text-sm focus:outline-none focus:ring-2 focus:ring-zinc-400 cursor-pointer"
-            value={country}
-            onChange={(e) => setCountry(e.target.value)}
-          >
-            <option value="">Land wählen</option>
-            <option value="Deutschland">Deutschland</option>
-            <option value="Österreich">Österreich</option>
-            <option value="Schweiz">Schweiz</option>
-            <option value="USA">USA</option>
-          </select>
-        </div>
-      </div>
-
       {/* Kontakt */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
-          <Label>E-Mail</Label>
+          <label className="block text-sm font-medium text-zinc-700 mb-1">
+            E-Mail
+          </label>
           <Input
-            type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
+            placeholder="kunde@example.com"
           />
         </div>
         <div>
-          <Label>Telefonnummer (optional)</Label>
+          <label className="block text-sm font-medium text-zinc-700 mb-1">
+            Telefon
+          </label>
           <Input
             value={phone}
             onChange={(e) => setPhone(e.target.value)}
+            placeholder="+49 ..."
           />
         </div>
       </div>
 
-      {/* Buttons */}
-      <div className="flex justify-end gap-3">
+      {/* Adresse */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-sm font-medium text-zinc-700 mb-1">
+            Straße
+          </label>
+          <Input
+            value={street}
+            onChange={(e) => setStreet(e.target.value)}
+            placeholder="Musterstraße 1"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-zinc-700 mb-1">
+            Stadt
+          </label>
+          <Input
+            value={city}
+            onChange={(e) => setCity(e.target.value)}
+            placeholder="Köln"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-zinc-700 mb-1">
+            Postleitzahl
+          </label>
+          <Input
+            value={postalCode}
+            onChange={(e) => setPostalCode(e.target.value)}
+            placeholder="50667"
+          />
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-zinc-700 mb-1">
+            Land
+          </label>
+          <Input
+            value={country}
+            onChange={(e) => setCountry(e.target.value)}
+            placeholder="Deutschland"
+          />
+        </div>
+      </div>
+
+      {/* Submit */}
+      <div className="flex justify-end">
         <Button type="submit">{submitLabel}</Button>
       </div>
     </form>

@@ -15,7 +15,9 @@ export function CustomerFormPage() {
   const { id } = useParams<{ id: string }>();
   const isEdit = !!id;
 
-  const [initial, setInitial] = useState<Partial<Customer> | null>(null);
+  const [initial, setInitial] = useState<Partial<Customer> | null>(
+    null
+  );
   const collectionName = useCustomerCollectionName();
 
   useEffect(() => {
@@ -52,8 +54,8 @@ export function CustomerFormPage() {
           {isEdit ? "Kundendaten bearbeiten" : "Neuen Kunden anlegen"}
         </h1>
         <p className="text-sm text-zinc-500">
-          Geben Sie alle erforderlichen Informationen für das Kundenprofil ein.
-          Felder mit einem Stern (*) sind Pflichtfelder.
+          Geben Sie alle erforderlichen Informationen für das Kundenprofil
+          ein. Felder mit einem Stern (*) sind Pflichtfelder.
         </p>
       </div>
 
@@ -62,6 +64,7 @@ export function CustomerFormPage() {
           initial={initial}
           onSubmit={handleSubmit}
           submitLabel={isEdit ? "Aktualisieren" : "Speichern"}
+          isEdit={isEdit}
         />
       </div>
     </div>

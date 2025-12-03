@@ -1,15 +1,40 @@
-// src/hooks/useCustomerCollectionName.ts
-import { useAuthMode } from "../context/AuthModeContext";
+// src/hook/useCustomerCollectionName.ts
+import { useEffect, useState } from "react";
+import { auth } from "../firebase";
+import { onAuthStateChanged } from "firebase/auth";
+
+const BASE_COLLECTION = "customers";
 
 export function useCustomerCollectionName() {
-  const { mode, userEmail } = useAuthMode();
+  const [collectionName, setCollectionName] = useState<string>(
+    `${BASE_COLLECTION}_public`
+  );
 
-  // Gastzugang oder noch kein Modus gesetzt -> öffentliche Collection
-  if (mode === "guest" || !mode) {
-    return "customers_public";
-  }
+  useEffect(() => {
+    // Erst schauen, ob explizit Gastmodus gesetzt wurde
+    const storedMode = localStorage.getItem("authMode") as
+      | "guest"
+      | "user"
+      | null;
 
-  // sehr simple Trennung pro User (für Demo ausreichend)
-  const sanitized = (userEmail || "user").replace(/[^a-zA-Z0-9]/g, "_");
-  return `customers_${sanitized}`;
+    if (storedMode === "guest") {
+      setCollectionName(`${BASE_COLLECTION}_public`);
+      return;
+    }
+
+    // Wenn kein Gast: auf Auth-State hören
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        // Eigene Collection pro User
+        setCollectionName(`${BASE_COLLECTION}_${user.uid}`);
+      } else {
+        // Nicht eingeloggt -> Gast als Fallback
+        setCollectionName(`${BASE_COLLECTION}_public`);
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
+
+  return collectionName;
 }

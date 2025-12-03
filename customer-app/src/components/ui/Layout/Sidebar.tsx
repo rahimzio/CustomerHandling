@@ -1,74 +1,107 @@
-// src/components/layout/Sidebar.tsx
-import { NavLink, useNavigate } from "react-router-dom";
-import { Separator } from "@radix-ui/react-select";
-import { cn } from "../../../lib/utils";
-import { Home, Settings, LogOut } from "lucide-react";
-import { useAuthMode } from "../../../context/AuthModeContext";
+// src/components/ui/Layout/Sidebar.tsx
+import { useLocation, useNavigate } from "react-router-dom";
+import { signOut } from "firebase/auth";
+import { auth } from "../../../firebase";
+import { Button } from "../button";
+import { Home } from "lucide-react";
 
-type SidebarProps = {
+interface SidebarProps {
   isOpen: boolean;
-};
+  onClose: () => void;
+}
 
-export function Sidebar({ isOpen }: SidebarProps) {
+export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const navigate = useNavigate();
-  const { setMode } = useAuthMode();
+  const location = useLocation();
 
-  const linkClasses = ({ isActive }: { isActive: boolean }) =>
-    cn(
-      "flex items-center gap-2 px-3 py-2 rounded-lg text-sm font-medium",
-      isActive
-        ? "bg-zinc-100 text-zinc-900"
-        : "text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900"
-    );
+  const links = [
+    { label: "Kunden", path: "/customers", isHome: true },
+    { label: "Einstellungen", path: "/settings", isHome: false },
+  ];
 
-  const handleLogout = () => {
-    setMode("guest");
-    navigate("/"); // zurück zur Login-/Gast-Seite
+  const handleNavigate = (path: string) => {
+    navigate(path);
+    onClose(); // Sidebar nach Navigation schließen (auf Mobile)
   };
 
-  const handleOpenSettings = () => {
-    navigate("/settings");
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+    } catch {
+      // ignorieren, falls schon ausgeloggt
+    }
+    localStorage.removeItem("authMode");
+    navigate("/");
+    onClose();
   };
 
   return (
-    <aside
-      className={cn(
-        "bg-white border-r w-64 flex flex-col transition-transform duration-200",
-        // auf kleinen Screens als Offcanvas
-        "fixed inset-y-0 left-0 z-40 md:static",
-        "h-screen md:h-auto",
-        isOpen ? "translate-x-0" : "-translate-x-full md:translate-x-0"
+    <>
+      {/* Sidebar */}
+      <aside
+        className={`
+          fixed inset-y-0 left-0 z-40 w-64 bg-white border-r
+          transform transition-transform duration-200
+          md:static md:translate-x-0
+          ${isOpen ? "translate-x-0" : "-translate-x-full"}
+          flex flex-col
+        `}
+      >
+        {/* Header in der Sidebar */}
+        <div className="flex items-center justify-between p-4 border-b md:border-b-0">
+          <span className="font-semibold">Menü</span>
+          {/* Close-Button nur auf Mobile */}
+          <button
+            type="button"
+            className="md:hidden text-zinc-500"
+            onClick={onClose}
+          >
+            ✕
+          </button>
+        </div>
+
+        {/* Navigation */}
+        <nav className="flex-1 p-4 space-y-2">
+          {links.map((link) => {
+            const isActive = location.pathname.startsWith(link.path);
+
+            return (
+              <Button
+                key={link.path}
+                variant={isActive ? "default" : "ghost"}
+                className={`w-full justify-start text-sm flex items-center gap-2 ${
+                  isActive
+                    ? "bg-zinc-900 text-white hover:bg-zinc-900"
+                    : "text-zinc-600 hover:bg-zinc-100"
+                }`}
+                onClick={() => handleNavigate(link.path)}
+              >
+                {link.isHome &&  <Home className="h-4 w-4" />}
+                <span>{link.label}</span>
+              </Button>
+            );
+          })}
+        </nav>
+
+        {/* Logout unten */}
+        <div className="p-4 border-t">
+          <Button
+            variant="outline"
+            className="w-full justify-start text-sm text-red-600 hover:text-red-700 hover:bg-red-50"
+            onClick={handleLogout}
+          >
+            Abmelden
+          </Button>
+        </div>
+      </aside>
+
+      {/* Overlay nur auf Mobile */}
+      {isOpen && (
+        <div
+          className="fixed inset-0 bg-black/30 z-30 md:hidden"
+          onClick={onClose}
+        />
       )}
-    >
-      <div className="px-4 py-4 font-semibold text-lg">Kundenverwaltung</div>
-
-      <nav className="flex-1 px-2 space-y-1 overflow-y-auto">
-        <NavLink to="/customers" className={linkClasses}>
-          <Home className="h-4 w-4" />
-          <span>Kunden</span>
-        </NavLink>
-      </nav>
-
-      <Separator />
-      <div className="p-3 space-y-1 text-sm border-t bg-white">
-        <button
-          type="button"
-          onClick={handleOpenSettings}
-          className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm font-medium text-zinc-500 hover:bg-zinc-50 hover:text-zinc-900"
-        >
-          <Settings className="h-4 w-4" />
-          <span>Einstellungen</span>
-        </button>
-
-        <button
-          type="button"
-          onClick={handleLogout}
-          className="flex items-center gap-2 w-full px-3 py-2 rounded-lg text-sm font-medium text-red-500 hover:bg-red-50 hover:text-red-600"
-        >
-          <LogOut className="h-4 w-4" />
-          <span>Logout</span>
-        </button>
-      </div>
-    </aside>
+    </>
   );
 }

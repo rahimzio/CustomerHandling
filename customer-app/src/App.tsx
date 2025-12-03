@@ -25,15 +25,19 @@ function App() {
     );
   }
 
-
   return (
     <div className="min-h-screen w-full bg-zinc-50 flex flex-col md:flex-row overflow-x-hidden">
       {/* Sidebar links */}
-      <Sidebar isOpen={sidebarOpen} />
+      <Sidebar
+        isOpen={sidebarOpen}
+        onClose={() => setSidebarOpen(false)}
+      />
 
       {/* Inhalt rechts */}
       <div className="flex-1 flex flex-col">
-        <Topbar onToggleSidebar={() => setSidebarOpen((prev) => !prev)} />
+        <Topbar
+          onToggleSidebar={() => setSidebarOpen((prev) => !prev)}
+        />
 
         <main className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 lg:px-8">
           {/* zentrierter Container, damit es im Vollbild nicht „zu breit“ wird */}
@@ -42,20 +46,27 @@ function App() {
               {/* Hauptbereich der App */}
               <Route path="/customers" element={<CustomersPage />} />
               <Route path="/customers/new" element={<CustomerFormPage />} />
-              <Route path="/customers/:id/edit" element={<CustomerFormPage />} />
-              <Route path="/customers/:id" element={<CustomerDetailPage />} />
+              <Route
+                path="/customers/:id/edit"
+                element={<CustomerFormPage />}
+              />
+              <Route
+                path="/customers/:id"
+                element={<CustomerDetailPage />}
+              />
               <Route path="/settings" element={<SettingsPage />} />
 
-
               {/* Fallback: Unbekannte Routen -> Kundenliste */}
-              <Route path="*" element={<Navigate to="/customers" replace />} />
+              <Route
+                path="*"
+                element={<Navigate to="/customers" replace />}
+              />
             </Routes>
           </div>
         </main>
       </div>
     </div>
   );
-
 }
 
 export default App;

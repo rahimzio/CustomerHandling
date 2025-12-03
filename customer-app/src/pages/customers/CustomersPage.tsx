@@ -37,6 +37,15 @@ export function CustomersPage() {
   const [search, setSearch] = useState("");
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [filterType, setFilterType] = useState<"all" | "private" | "company">(
+    "all"
+  );
+  const [filterStatus, setFilterStatus] = useState<
+    "all" | "active" | "inactive"
+  >("all");
+  const [filterCountry, setFilterCountry] = useState<string>("all");
+
   const navigate = useNavigate();
   const collectionName = useCustomerCollectionName();
 
@@ -47,12 +56,47 @@ export function CustomersPage() {
     })();
   }, [collectionName]);
 
+  // Länder-Liste für Filter (einzigartige, sortierte Länder)
+  const countryOptions = Array.from(
+    new Set(
+      customers
+        .map((c) => c.country)
+        .filter((c): c is string => !!c && c.trim().length > 0)
+    )
+  ).sort((a, b) => a.localeCompare(b));
+
   const filtered = customers.filter((c) => {
+    // Name-Filter (Suche)
     const name =
       c.type === "company"
         ? c.companyName ?? ""
         : `${c.firstName ?? ""} ${c.lastName ?? ""}`;
-    return name.toLowerCase().includes(search.toLowerCase());
+    const matchesSearch = name
+      .toLowerCase()
+      .includes(search.toLowerCase());
+
+    if (!matchesSearch) return false;
+
+    // Typ-Filter
+    if (filterType !== "all" && c.type !== filterType) {
+      return false;
+    }
+
+    // Status-Filter
+    const status = (c.status ?? "active") as "active" | "inactive";
+    if (filterStatus !== "all" && status !== filterStatus) {
+      return false;
+    }
+
+    // Länder-Filter
+    if (
+      filterCountry !== "all" &&
+      (c.country ?? "").trim() !== filterCountry
+    ) {
+      return false;
+    }
+
+    return true;
   });
 
   const handleConfirmDelete = async () => {
@@ -62,9 +106,28 @@ export function CustomersPage() {
     setDeleteId(null);
   };
 
+  // KPI-Berechnungen
   const total = customers.length;
-  const active = customers.length;
-  const newThisMonth = customers.length;
+
+  const active = customers.filter(
+    (c) => (c.status ?? "active") === "active"
+  ).length;
+
+  const now = new Date();
+  const newThisMonth = customers.filter((c) => {
+    if (!c.createdAt) return false;
+    const d = new Date(c.createdAt);
+    return (
+      d.getFullYear() === now.getFullYear() &&
+      d.getMonth() === now.getMonth()
+    );
+  }).length;
+
+  const resetFilters = () => {
+    setFilterType("all");
+    setFilterStatus("all");
+    setFilterCountry("all");
+  };
 
   return (
     <>
@@ -109,12 +172,14 @@ export function CustomersPage() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <span className="text-3xl font-semibold">{newThisMonth}</span>
+              <span className="text-3xl font-semibold">
+                {newThisMonth}
+              </span>
             </CardContent>
           </Card>
         </div>
 
-        {/* Suchleiste */}
+        {/* Suchleiste + Filter-Button */}
         <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
           <Input
             placeholder="Kunden suchen..."
@@ -122,93 +187,258 @@ export function CustomersPage() {
             onChange={(e) => setSearch(e.target.value)}
             className="w-full sm:max-w-xs"
           />
+          <Button
+            type="button"
+            variant="default"
+            className="sm:w-auto flex items-center gap-2"
+            onClick={() => setIsFilterOpen(true)}
+          >
+            {/* Trichter-Icon */}
+            <span className="inline-flex items-center justify-center">
+              <svg
+                className="w-4 h-4"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                {/* Einfaches Funnel-Icon */}
+                <path d="M4 4h16l-6 7v7l-4-2v-5z" />
+              </svg>
+            </span>
+            {/* Text klar weiß */}
+            <span className="text-white">Filter</span>
+          </Button>
         </div>
 
-        {/* Tabelle in scrollbarer Box */}
+
+        {/* Tabelle mit fixem Header + scrollbarem Body */}
         <Card>
           <CardContent className="p-0">
             <div className="overflow-x-auto">
-              <div className="max-h-[45vh] overflow-y-auto border border-zinc-200 rounded-md">
+              {/* Rahmen um Header + Body gemeinsam */}
+              <div className="border border-zinc-200 rounded-md">
+                {/* Fester Header – bewegt sich NICHT beim Scrollen */}
                 <Table className="min-w-[650px]">
-                  <TableHeader className="sticky top-0 bg-white z-10">
+                  <TableHeader>
                     <TableRow>
-                      <TableHead>Name</TableHead>
-                      <TableHead>Typ</TableHead>
-                      <TableHead>Land</TableHead>
-                      <TableHead className="w-[140px] text-right">
+                      <TableHead className="bg-white">Name</TableHead>
+                      <TableHead className="bg-white">Typ</TableHead>
+                      <TableHead className="bg-white">Land</TableHead>
+                      <TableHead className="bg-white w-[180px] text-right">
                         Aktionen
                       </TableHead>
                     </TableRow>
                   </TableHeader>
-                  <TableBody>
-                    {filtered.length > 0 ? (
-                      filtered.map((c) => {
-                        const name =
-                          c.type === "company"
-                            ? c.companyName
-                            : `${c.firstName} ${c.lastName}`;
-
-                        return (
-                          <TableRow key={c.id}>
-                            <TableCell className="whitespace-nowrap">
-                              {name}
-                            </TableCell>
-                            <TableCell>
-                              <Badge variant="outline">
-                                {c.type === "company"
-                                  ? "Unternehmen"
-                                  : "Privat"}
-                              </Badge>
-                            </TableCell>
-                            <TableCell>{c.country}</TableCell>
-                            <TableCell className="text-right space-x-1 sm:space-x-2">
-                              <Button
-                                variant="default"
-                                size="icon"
-                                onClick={() =>
-                                  navigate(`/customers/${c.id}`)
-                                }
-                                aria-label="Details anzeigen"
-                              >
-                                👁
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                onClick={() =>
-                                  navigate(`/customers/${c.id}/edit`)
-                                }
-                                aria-label="Bearbeiten"
-                              >
-                                ✏️
-                              </Button>
-                              <Button
-                                variant="ghost"
-                                size="icon"
-                                className="text-red-500"
-                                onClick={() => setDeleteId(c.id!)}
-                                aria-label="Löschen"
-                              >
-                                🗑
-                              </Button>
-                            </TableCell>
-                          </TableRow>
-                        );
-                      })
-                    ) : (
-                      <TableRow>
-                        <TableCell colSpan={4} className="text-center py-6">
-                          Keine Kunden gefunden.
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </TableBody>
                 </Table>
+
+                {/* Scrollbarer Body */}
+                <div className="max-h-[45vh] overflow-y-auto">
+                  <Table className="min-w-[650px]">
+                    <TableBody>
+                      {filtered.length > 0 ? (
+                        filtered.map((c) => {
+                          const name =
+                            c.type === "company"
+                              ? c.companyName
+                              : `${c.firstName} ${c.lastName}`;
+
+                          return (
+                            <TableRow key={c.id}>
+                              <TableCell className="whitespace-nowrap">
+                                {name}
+                              </TableCell>
+                              <TableCell>
+                                <Badge variant="outline">
+                                  {c.type === "company"
+                                    ? "Unternehmen"
+                                    : "Privat"}
+                                </Badge>
+                              </TableCell>
+                              <TableCell>{c.country}</TableCell>
+                              <TableCell className="text-right space-x-1 sm:space-x-2">
+                                <Button
+                                  variant="default"
+                                  size="icon"
+                                  className="bg-zinc-900 text-white border border-zinc-900 hover:bg-white hover:text-zinc-900"
+                                  onClick={() =>
+                                    navigate(`/customers/${c.id}`)
+                                  }
+                                  aria-label="Details anzeigen"
+                                >
+                                  👁
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="bg-zinc-900 text-white border border-zinc-900 hover:bg-white hover:text-zinc-900"
+                                  onClick={() =>
+                                    navigate(`/customers/${c.id}/edit`)
+                                  }
+                                  aria-label="Bearbeiten"
+                                >
+                                  ✏️
+                                </Button>
+                                <Button
+                                  variant="ghost"
+                                  size="icon"
+                                  className="bg-zinc-900 text-red-500 border border-zinc-900 hover:bg-white hover:text-red-500"
+                                  onClick={() => setDeleteId(c.id!)}
+                                  aria-label="Löschen"
+                                >
+                                  🗑
+                                </Button>
+                              </TableCell>
+                            </TableRow>
+                          );
+                        })
+                      ) : (
+                        <TableRow>
+                          <TableCell
+                            colSpan={4}
+                            className="text-center py-6"
+                          >
+                            Keine Kunden gefunden.
+                          </TableCell>
+                        </TableRow>
+                      )}
+                    </TableBody>
+                  </Table>
+                </div>
               </div>
             </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Filter-Dialog */}
+      <Dialog open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Filter</DialogTitle>
+          </DialogHeader>
+
+          <div className="mt-4 space-y-4">
+            {/* Typ-Filter */}
+            <div className="space-y-2">
+              <div className="text-xs text-zinc-500">Typ</div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setFilterType("all")}
+                  className={`px-3 py-1.5 rounded-md text-sm border transition ${
+                    filterType === "all"
+                      ? "bg-zinc-900 text-white border-zinc-900"
+                      : "bg-white text-zinc-400 border-zinc-200 hover:text-zinc-600"
+                  }`}
+                >
+                  Alle
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFilterType("private")}
+                  className={`px-3 py-1.5 rounded-md text-sm border transition ${
+                    filterType === "private"
+                      ? "bg-zinc-900 text-white border-zinc-900"
+                      : "bg-white text-zinc-400 border-zinc-200 hover:text-zinc-600"
+                  }`}
+                >
+                  Privat
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFilterType("company")}
+                  className={`px-3 py-1.5 rounded-md text-sm border transition ${
+                    filterType === "company"
+                      ? "bg-zinc-900 text-white border-zinc-900"
+                      : "bg-white text-zinc-400 border-zinc-200 hover:text-zinc-600"
+                  }`}
+                >
+                  Unternehmen
+                </button>
+              </div>
+            </div>
+
+            {/* Status-Filter */}
+            <div className="space-y-2">
+              <div className="text-xs text-zinc-500">Status</div>
+              <div className="flex flex-wrap gap-2">
+                <button
+                  type="button"
+                  onClick={() => setFilterStatus("all")}
+                  className={`px-3 py-1.5 rounded-md text-sm border transition ${
+                    filterStatus === "all"
+                      ? "bg-zinc-900 text-white border-zinc-900"
+                      : "bg-white text-zinc-400 border-zinc-200 hover:text-zinc-600"
+                  }`}
+                >
+                  Alle
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFilterStatus("active")}
+                  className={`px-3 py-1.5 rounded-md text-sm border transition ${
+                    filterStatus === "active"
+                      ? "bg-zinc-900 text-white border-zinc-900"
+                      : "bg-white text-zinc-400 border-zinc-200 hover:text-zinc-600"
+                  }`}
+                >
+                  Aktiv
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFilterStatus("inactive")}
+                  className={`px-3 py-1.5 rounded-md text-sm border transition ${
+                    filterStatus === "inactive"
+                      ? "bg-zinc-900 text-white border-zinc-900"
+                      : "bg-white text-zinc-400 border-zinc-200 hover:text-zinc-600"
+                  }`}
+                >
+                  Inaktiv
+                </button>
+              </div>
+            </div>
+
+            {/* Länder-Filter */}
+            <div className="space-y-2">
+              <div className="text-xs text-zinc-500">Land</div>
+              <select
+                className="w-full h-9 border border-zinc-200 rounded-md px-2 text-sm bg-white"
+                value={filterCountry}
+                onChange={(e) => setFilterCountry(e.target.value)}
+              >
+                <option value="all">Alle Länder</option>
+                {countryOptions.map((country) => (
+                  <option key={country} value={country}>
+                    {country}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <DialogFooter className="mt-4 flex flex-col sm:flex-row sm:justify-end gap-2">
+            <Button
+              variant="default"
+              className="w-full sm:w-auto"
+              onClick={() => {
+                resetFilters();
+                setIsFilterOpen(false);
+              }}
+            >
+              Zurücksetzen
+            </Button>
+            <Button
+              className="w-full sm:w-auto"
+              onClick={() => setIsFilterOpen(false)}
+            >
+              Anwenden
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Delete-Dialog – mit shadcn, schön zentriert */}
       <Dialog
@@ -222,19 +452,19 @@ export function CustomersPage() {
             <DialogTitle>Kundenlöschung bestätigen</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-zinc-600 mt-2">
-            Sind Sie sicher, dass Sie diesen Kunden löschen möchten? Diese
-            Aktion kann nicht rückgängig gemacht werden.
+            Sind Sie sicher, dass Sie diesen Kunden löschen möchten?
+            Diese Aktion kann nicht rückgängig gemacht werden.
           </p>
           <DialogFooter className="mt-4 flex flex-col sm:flex-row sm:justify-end gap-2">
             <Button
-              variant="outline"
+              variant="default"
               onClick={() => setDeleteId(null)}
               className="w-full sm:w-auto"
             >
               Abbrechen
             </Button>
             <Button
-              variant="destructive"
+              variant="reddefault"
               onClick={handleConfirmDelete}
               className="w-full sm:w-auto"
             >

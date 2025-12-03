@@ -26,11 +26,10 @@ export function Topbar({ onToggleSidebar }: TopbarProps) {
       </div>
 
       <div className="flex items-center gap-3 sm:gap-4">
-        <button className="text-zinc-500 text-lg leading-none" aria-label="Benachrichtigungen">
-          🔔
-        </button>
+       
+
         <Avatar className="h-8 w-8">
-          <AvatarFallback>R</AvatarFallback>
+          <AvatarFallback>U</AvatarFallback>
         </Avatar>
       </div>
     </header>
