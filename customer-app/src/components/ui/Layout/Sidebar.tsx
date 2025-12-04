@@ -2,8 +2,8 @@
 import { useLocation, useNavigate } from "react-router-dom";
 import { signOut } from "firebase/auth";
 import { auth } from "../../../firebase";
+import { useLanguage } from "../../../context/LanguageContext";
 import { Button } from "../button";
-import { Home } from "lucide-react";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -13,23 +13,22 @@ interface SidebarProps {
 export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { t } = useLanguage();
 
   const links = [
-    { label: "Kunden", path: "/customers", isHome: true },
-    { label: "Einstellungen", path: "/settings", isHome: false },
+    { label: t("sidebar.customers"), path: "/customers", isHome: true },
+    { label: t("sidebar.settings"), path: "/settings", isHome: false },
   ];
 
   const handleNavigate = (path: string) => {
     navigate(path);
-    onClose(); // Sidebar nach Navigation schließen (auf Mobile)
+    onClose();
   };
 
   const handleLogout = async () => {
     try {
       await signOut(auth);
-    } catch {
-      // ignorieren, falls schon ausgeloggt
-    }
+    } catch {}
     localStorage.removeItem("authMode");
     navigate("/");
     onClose();
@@ -37,7 +36,6 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
 
   return (
     <>
-      {/* Sidebar */}
       <aside
         className={`
           fixed inset-y-0 left-0 z-40 w-64 bg-white border-r
@@ -47,10 +45,8 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           flex flex-col
         `}
       >
-        {/* Header in der Sidebar */}
         <div className="flex items-center justify-between p-4 border-b md:border-b-0">
-          <span className="font-semibold">Menü</span>
-          {/* Close-Button nur auf Mobile */}
+          <span className="font-semibold">{t("sidebar.menu")}</span>
           <button
             type="button"
             className="md:hidden text-zinc-500"
@@ -60,11 +56,9 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
           </button>
         </div>
 
-        {/* Navigation */}
         <nav className="flex-1 p-4 space-y-2">
           {links.map((link) => {
             const isActive = location.pathname.startsWith(link.path);
-
             return (
               <Button
                 key={link.path}
@@ -76,26 +70,24 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
                 }`}
                 onClick={() => handleNavigate(link.path)}
               >
-                {link.isHome &&  <Home className="h-4 w-4" />}
+                {link.isHome && <span>🏠</span>}
                 <span>{link.label}</span>
               </Button>
             );
           })}
         </nav>
 
-        {/* Logout unten */}
         <div className="p-4 border-t">
           <Button
             variant="outline"
             className="w-full justify-start text-sm text-red-600 hover:text-red-700 hover:bg-red-50"
             onClick={handleLogout}
           >
-            Abmelden
+            {t("sidebar.logout")}
           </Button>
         </div>
       </aside>
 
-      {/* Overlay nur auf Mobile */}
       {isOpen && (
         <div
           className="fixed inset-0 bg-black/30 z-30 md:hidden"

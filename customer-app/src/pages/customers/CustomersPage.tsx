@@ -1,4 +1,4 @@
-// src/pages/customers/CustomersPage.tsx
+// src/pages/customers/CustomersPage.tsx 
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
@@ -31,8 +31,11 @@ import {
 } from "../../components/ui/dialog";
 import { Input } from "../../components/ui/input";
 import { useCustomerCollectionName } from "../../hook/useCustomerCollectionName";
+import { useLanguage } from "../../context/LanguageContext";
 
 export function CustomersPage() {
+  const { t } = useLanguage();
+
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [search, setSearch] = useState("");
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -129,17 +132,37 @@ export function CustomersPage() {
     setFilterCountry("all");
   };
 
+  const renderStatusBadge = (status: Customer["status"] | undefined) => {
+    const current = status ?? "active";
+    return (
+      <Badge
+        variant="outline"
+        className={
+          current === "active"
+            ? "border-green-500 text-green-600"
+            : "border-zinc-400 text-zinc-500"
+        }
+      >
+        {current === "active"
+          ? t("customers.status.active")
+          : t("customers.status.inactive")}
+      </Badge>
+    );
+  };
+
   return (
     <>
       <div className="w-full px-0 space-y-6">
         {/* Header */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <h1 className="text-2xl font-semibold">Kunden</h1>
+          <h1 className="text-2xl font-semibold">
+            {t("customers.title")}
+          </h1>
           <Button
             className="w-full sm:w-auto"
             onClick={() => navigate("/customers/new")}
           >
-            + Neuer Kunde
+            {t("customers.newCustomer")}
           </Button>
         </div>
 
@@ -148,7 +171,7 @@ export function CustomersPage() {
           <Card>
             <CardHeader>
               <CardTitle className="text-sm text-zinc-500">
-                Gesamtkunden
+                {t("customers.kpi.total")}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -158,7 +181,7 @@ export function CustomersPage() {
           <Card>
             <CardHeader>
               <CardTitle className="text-sm text-zinc-500">
-                Aktive Kunden
+                {t("customers.kpi.active")}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -168,7 +191,7 @@ export function CustomersPage() {
           <Card>
             <CardHeader>
               <CardTitle className="text-sm text-zinc-500">
-                Neue Kunden (Monat)
+                {t("customers.kpi.newThisMonth")}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -182,7 +205,7 @@ export function CustomersPage() {
         {/* Suchleiste + Filter-Button */}
         <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
           <Input
-            placeholder="Kunden suchen..."
+            placeholder={t("customers.searchPlaceholder")}
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             className="w-full sm:max-w-xs"
@@ -204,212 +227,330 @@ export function CustomersPage() {
                 strokeLinecap="round"
                 strokeLinejoin="round"
               >
-                {/* Einfaches Funnel-Icon */}
                 <path d="M4 4h16l-6 7v7l-4-2v-5z" />
               </svg>
             </span>
-            {/* Text klar weiß */}
-            <span className="text-white">Filter</span>
+            <span className="text-white">
+              {t("customers.filter")}
+            </span>
           </Button>
         </div>
 
-
-        {/* Tabelle mit fixem Header + scrollbarem Body */}
-        <Card>
+        {/* Desktop: eine Tabelle mit sticky Header + scrollbarem Body */}
+        <Card className="hidden md:block">
           <CardContent className="p-0">
             <div className="overflow-x-auto">
-              {/* Rahmen um Header + Body gemeinsam */}
-              <div className="border border-zinc-200 rounded-md">
-                {/* Fester Header – bewegt sich NICHT beim Scrollen */}
+              <div className="max-h-[45vh] overflow-y-auto border border-zinc-200 rounded-md">
                 <Table className="min-w-[650px]">
-                  <TableHeader>
+                  <TableHeader className="sticky top-0 bg-white z-10">
                     <TableRow>
-                      <TableHead className="bg-white">Name</TableHead>
-                      <TableHead className="bg-white">Typ</TableHead>
-                      <TableHead className="bg-white">Land</TableHead>
-                      <TableHead className="bg-white w-[180px] text-right">
-                        Aktionen
+                      <TableHead>{t("customers.table.name")}</TableHead>
+                      <TableHead>{t("customers.table.type")}</TableHead>
+                      <TableHead>{t("customers.table.country")}</TableHead>
+                      <TableHead>{t("customers.table.status")}</TableHead>
+                      <TableHead className="w-[180px] text-right">
+                        {t("customers.table.actions")}
                       </TableHead>
                     </TableRow>
                   </TableHeader>
-                </Table>
 
-                {/* Scrollbarer Body */}
-                <div className="max-h-[45vh] overflow-y-auto">
-                  <Table className="min-w-[650px]">
-                    <TableBody>
-                      {filtered.length > 0 ? (
-                        filtered.map((c) => {
-                          const name =
-                            c.type === "company"
-                              ? c.companyName
-                              : `${c.firstName} ${c.lastName}`;
+                  <TableBody>
+                    {filtered.length > 0 ? (
+                      filtered.map((c) => {
+                        const name =
+                          c.type === "company"
+                            ? c.companyName
+                            : `${c.firstName} ${c.lastName}`;
 
-                          return (
-                            <TableRow key={c.id}>
-                              <TableCell className="whitespace-nowrap">
-                                {name}
-                              </TableCell>
-                              <TableCell>
-                                <Badge variant="outline">
-                                  {c.type === "company"
-                                    ? "Unternehmen"
-                                    : "Privat"}
-                                </Badge>
-                              </TableCell>
-                              <TableCell>{c.country}</TableCell>
-                              <TableCell className="text-right space-x-1 sm:space-x-2">
-                                <Button
-                                  variant="default"
-                                  size="icon"
-                                  className="bg-zinc-900 text-white border border-zinc-900 hover:bg-white hover:text-zinc-900"
-                                  onClick={() =>
-                                    navigate(`/customers/${c.id}`)
-                                  }
-                                  aria-label="Details anzeigen"
-                                >
-                                  👁
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="bg-zinc-900 text-white border border-zinc-900 hover:bg-white hover:text-zinc-900"
-                                  onClick={() =>
-                                    navigate(`/customers/${c.id}/edit`)
-                                  }
-                                  aria-label="Bearbeiten"
-                                >
-                                  ✏️
-                                </Button>
-                                <Button
-                                  variant="ghost"
-                                  size="icon"
-                                  className="bg-zinc-900 text-red-500 border border-zinc-900 hover:bg-white hover:text-red-500"
-                                  onClick={() => setDeleteId(c.id!)}
-                                  aria-label="Löschen"
-                                >
-                                  🗑
-                                </Button>
-                              </TableCell>
-                            </TableRow>
-                          );
-                        })
-                      ) : (
-                        <TableRow>
-                          <TableCell
-                            colSpan={4}
-                            className="text-center py-6"
+                        const isInactive = (c.status ?? "active") === "inactive";
+
+                        return (
+                          <TableRow
+                            key={c.id}
+                            className={isInactive ? "bg-zinc-50" : ""}
                           >
-                            Keine Kunden gefunden.
-                          </TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                </div>
+                            {/* Name */}
+                            <TableCell className="whitespace-nowrap">
+                              {name}
+                            </TableCell>
+
+                            {/* Typ */}
+                            <TableCell>
+                              <Badge variant="outline">
+                                {c.type === "company"
+                                  ? t("customers.type.company")
+                                  : t("customers.type.private")}
+                              </Badge>
+                            </TableCell>
+
+                            {/* Land */}
+                            <TableCell>
+                              {c.country}
+                            </TableCell>
+
+                            {/* Status */}
+                            <TableCell>
+                              {renderStatusBadge(c.status)}
+                            </TableCell>
+
+                            {/* Aktionen */}
+                            <TableCell className="text-right space-x-1 sm:space-x-2">
+                              <Button
+                                variant="default"
+                                size="icon"
+                                className="bg-zinc-900 text-white border border-zinc-900 hover:bg-white hover:text-zinc-900"
+                                onClick={() => navigate(`/customers/${c.id}`)}
+                                aria-label="Details anzeigen"
+                              >
+                                👁
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="bg-zinc-900 text-white border border-zinc-900 hover:bg-white hover:text-zinc-900"
+                                onClick={() => navigate(`/customers/${c.id}/edit`)}
+                                aria-label="Bearbeiten"
+                              >
+                                ✏️
+                              </Button>
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                className="bg-zinc-900 text-red-500 border border-zinc-900 hover:bg-white hover:text-red-500"
+                                onClick={() => setDeleteId(c.id!)}
+                                aria-label="Löschen"
+                              >
+                                🗑
+                              </Button>
+                            </TableCell>
+                          </TableRow>
+                        );
+                      })
+                    ) : (
+                      <TableRow>
+                        <TableCell
+                          colSpan={5}
+                          className="text-center py-6"
+                        >
+                          {t("customers.empty")}
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </TableBody>
+                </Table>
               </div>
             </div>
           </CardContent>
         </Card>
+
+
+        {/* Mobile: Karten-Layout (statt Tabelle) */}
+        <div className="space-y-3 md:hidden">
+          {filtered.length > 0 ? (
+            filtered.map((c) => {
+              const name =
+                c.type === "company"
+                  ? c.companyName
+                  : `${c.firstName} ${c.lastName}`;
+
+              const isInactive = (c.status ?? "active") === "inactive";
+
+              return (
+                <Card
+                  key={c.id}
+                  className={isInactive ? "bg-zinc-50" : "bg-white"}
+                >
+                  <CardContent className="p-4 space-y-3">
+                    {/* Name + Typ */}
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1">
+                        <div className="text-sm text-zinc-500">
+                          {t("customers.table.name")}
+                        </div>
+                        <div className="font-medium break-words">
+                          {name}
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end gap-1">
+                        <div className="text-xs text-zinc-500">
+                          {t("customers.table.type")}
+                        </div>
+                        <Badge variant="outline">
+                          {c.type === "company"
+                            ? t("customers.type.company")
+                            : t("customers.type.private")}
+                        </Badge>
+                      </div>
+                    </div>
+
+                    {/* Land + Status */}
+                    <div className="flex items-start justify-between gap-3">
+                      <div>
+                        <div className="text-xs text-zinc-500">
+                          {t("customers.table.country")}
+                        </div>
+                        <div className="text-sm">
+                          {c.country ?? "—"}
+                        </div>
+                      </div>
+                      <div className="flex flex-col items-end">
+                        <div className="text-xs text-zinc-500 mb-1">
+                          {t("customers.table.status")}
+                        </div>
+                        {renderStatusBadge(c.status)}
+                      </div>
+                    </div>
+
+                    {/* Aktionen */}
+                    <div className="pt-3 border-t border-zinc-100 flex items-center justify-between gap-2">
+                      <div className="text-xs text-zinc-400">
+                        {t("customers.table.actions")}
+                      </div>
+                      <div className="space-x-1">
+                        <Button
+                          variant="default"
+                          size="icon-sm"
+                          className="bg-zinc-900 text-white border border-zinc-900 hover:bg-white hover:text-zinc-900"
+                          onClick={() => navigate(`/customers/${c.id}`)}
+                          aria-label="Details anzeigen"
+                        >
+                          👁
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          className="bg-zinc-900 text-white border border-zinc-900 hover:bg-white hover:text-zinc-900"
+                          onClick={() =>
+                            navigate(`/customers/${c.id}/edit`)
+                          }
+                          aria-label="Bearbeiten"
+                        >
+                          ✏️
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon-sm"
+                          className="bg-zinc-900 text-red-500 border border-zinc-900 hover:bg-white hover:text-red-500"
+                          onClick={() => setDeleteId(c.id!)}
+                          aria-label="Löschen"
+                        >
+                          🗑
+                        </Button>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              );
+            })
+          ) : (
+            <Card>
+              <CardContent className="py-6 text-center text-sm text-zinc-500">
+                {t("customers.empty")}
+              </CardContent>
+            </Card>
+          )}
+        </div>
       </div>
 
       {/* Filter-Dialog */}
       <Dialog open={isFilterOpen} onOpenChange={setIsFilterOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Filter</DialogTitle>
+            <DialogTitle>{t("customers.filter.title")}</DialogTitle>
           </DialogHeader>
 
           <div className="mt-4 space-y-4">
             {/* Typ-Filter */}
             <div className="space-y-2">
-              <div className="text-xs text-zinc-500">Typ</div>
+              <div className="text-xs text-zinc-500">
+                {t("customers.filter.type")}
+              </div>
               <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
                   onClick={() => setFilterType("all")}
-                  className={`px-3 py-1.5 rounded-md text-sm border transition ${
-                    filterType === "all"
+                  className={`px-3 py-1.5 rounded-md text-sm border transition ${filterType === "all"
                       ? "bg-zinc-900 text-white border-zinc-900"
                       : "bg-white text-zinc-400 border-zinc-200 hover:text-zinc-600"
-                  }`}
+                    }`}
                 >
-                  Alle
+                  {t("customers.filter.all")}
                 </button>
                 <button
                   type="button"
                   onClick={() => setFilterType("private")}
-                  className={`px-3 py-1.5 rounded-md text-sm border transition ${
-                    filterType === "private"
+                  className={`px-3 py-1.5 rounded-md text-sm border transition ${filterType === "private"
                       ? "bg-zinc-900 text-white border-zinc-900"
                       : "bg-white text-zinc-400 border-zinc-200 hover:text-zinc-600"
-                  }`}
+                    }`}
                 >
-                  Privat
+                  {t("customers.type.private")}
                 </button>
                 <button
                   type="button"
                   onClick={() => setFilterType("company")}
-                  className={`px-3 py-1.5 rounded-md text-sm border transition ${
-                    filterType === "company"
+                  className={`px-3 py-1.5 rounded-md text-sm border transition ${filterType === "company"
                       ? "bg-zinc-900 text-white border-zinc-900"
                       : "bg-white text-zinc-400 border-zinc-200 hover:text-zinc-600"
-                  }`}
+                    }`}
                 >
-                  Unternehmen
+                  {t("customers.type.company")}
                 </button>
               </div>
             </div>
 
             {/* Status-Filter */}
             <div className="space-y-2">
-              <div className="text-xs text-zinc-500">Status</div>
+              <div className="text-xs text-zinc-500">
+                {t("customers.filter.status")}
+              </div>
               <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
                   onClick={() => setFilterStatus("all")}
-                  className={`px-3 py-1.5 rounded-md text-sm border transition ${
-                    filterStatus === "all"
+                  className={`px-3 py-1.5 rounded-md text-sm border transition ${filterStatus === "all"
                       ? "bg-zinc-900 text-white border-zinc-900"
                       : "bg-white text-zinc-400 border-zinc-200 hover:text-zinc-600"
-                  }`}
+                    }`}
                 >
-                  Alle
+                  {t("customers.filter.all")}
                 </button>
                 <button
                   type="button"
                   onClick={() => setFilterStatus("active")}
-                  className={`px-3 py-1.5 rounded-md text-sm border transition ${
-                    filterStatus === "active"
+                  className={`px-3 py-1.5 rounded-md text-sm border transition ${filterStatus === "active"
                       ? "bg-zinc-900 text-white border-zinc-900"
                       : "bg-white text-zinc-400 border-zinc-200 hover:text-zinc-600"
-                  }`}
+                    }`}
                 >
-                  Aktiv
+                  {t("customers.status.active")}
                 </button>
                 <button
                   type="button"
                   onClick={() => setFilterStatus("inactive")}
-                  className={`px-3 py-1.5 rounded-md text-sm border transition ${
-                    filterStatus === "inactive"
+                  className={`px-3 py-1.5 rounded-md text-sm border transition ${filterStatus === "inactive"
                       ? "bg-zinc-900 text-white border-zinc-900"
                       : "bg-white text-zinc-400 border-zinc-200 hover:text-zinc-600"
-                  }`}
+                    }`}
                 >
-                  Inaktiv
+                  {t("customers.status.inactive")}
                 </button>
               </div>
             </div>
 
             {/* Länder-Filter */}
             <div className="space-y-2">
-              <div className="text-xs text-zinc-500">Land</div>
+              <div className="text-xs text-zinc-500">
+                {t("customers.filter.country")}
+              </div>
               <select
                 className="w-full h-9 border border-zinc-200 rounded-md px-2 text-sm bg-white"
                 value={filterCountry}
                 onChange={(e) => setFilterCountry(e.target.value)}
               >
-                <option value="all">Alle Länder</option>
+                <option value="all">
+                  {t("customers.filter.allCountries")}
+                </option>
                 {countryOptions.map((country) => (
                   <option key={country} value={country}>
                     {country}
@@ -421,20 +562,20 @@ export function CustomersPage() {
 
           <DialogFooter className="mt-4 flex flex-col sm:flex-row sm:justify-end gap-2">
             <Button
-              variant="default"
+              variant="outline"
               className="w-full sm:w-auto"
               onClick={() => {
                 resetFilters();
                 setIsFilterOpen(false);
               }}
             >
-              Zurücksetzen
+              {t("common.reset")}
             </Button>
             <Button
               className="w-full sm:w-auto"
               onClick={() => setIsFilterOpen(false)}
             >
-              Anwenden
+              {t("common.apply")}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -449,26 +590,27 @@ export function CustomersPage() {
       >
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
-            <DialogTitle>Kundenlöschung bestätigen</DialogTitle>
+            <DialogTitle>
+              {t("customers.dialog.deleteTitle")}
+            </DialogTitle>
           </DialogHeader>
           <p className="text-sm text-zinc-600 mt-2">
-            Sind Sie sicher, dass Sie diesen Kunden löschen möchten?
-            Diese Aktion kann nicht rückgängig gemacht werden.
+            {t("customers.dialog.deleteText")}
           </p>
           <DialogFooter className="mt-4 flex flex-col sm:flex-row sm:justify-end gap-2">
             <Button
-              variant="default"
+              variant="outline"
               onClick={() => setDeleteId(null)}
               className="w-full sm:w-auto"
             >
-              Abbrechen
+              {t("common.cancel")}
             </Button>
             <Button
-              variant="reddefault"
+              variant="destructive"
               onClick={handleConfirmDelete}
               className="w-full sm:w-auto"
             >
-              Löschen bestätigen
+              {t("customers.dialog.deleteConfirm")}
             </Button>
           </DialogFooter>
         </DialogContent>

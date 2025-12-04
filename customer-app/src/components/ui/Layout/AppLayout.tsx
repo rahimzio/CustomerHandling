@@ -2,10 +2,8 @@
 import { useState } from "react";
 import { Outlet } from "react-router-dom";
 import { Sidebar } from "./Sidebar";
-
 export function AppLayout() {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-
   return (
     <div className="flex min-h-screen">
       {/* Sidebar + Overlay */}
