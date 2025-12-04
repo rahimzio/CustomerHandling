@@ -11,7 +11,6 @@ export function useCustomerCollectionName() {
   );
 
   useEffect(() => {
-    // Erst schauen, ob explizit Gastmodus gesetzt wurde
     const storedMode = localStorage.getItem("authMode") as
       | "guest"
       | "user"
@@ -22,13 +21,10 @@ export function useCustomerCollectionName() {
       return;
     }
 
-    // Wenn kein Gast: auf Auth-State hören
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
-        // Eigene Collection pro User
         setCollectionName(`${BASE_COLLECTION}_${user.uid}`);
       } else {
-        // Nicht eingeloggt -> Gast als Fallback
         setCollectionName(`${BASE_COLLECTION}_public`);
       }
     });

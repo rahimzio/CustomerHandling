@@ -43,12 +43,13 @@ export function SettingsPage() {
     }
 
     const profileLang: LanguageCode =
-      data?.language ?? (localStorage.getItem("appLanguage") as LanguageCode) ?? "de";
+      data?.language ??
+      (localStorage.getItem("appLanguage") as LanguageCode) ??
+      "de";
 
     setFirstName(data?.firstName ?? "");
     setLastName(data?.lastName ?? "");
 
-    // Wenn kein Name gesetzt, versuche aus E-Mail abzuleiten
     if (!data?.firstName && emailHint) {
       const namePart = emailHint.split("@")[0];
       if (namePart) {
@@ -58,7 +59,6 @@ export function SettingsPage() {
       }
     }
 
-    // Globale Sprache setzen -> UI springt um
     setLanguage(profileLang);
 
     setProfileId(id);
@@ -69,7 +69,8 @@ export function SettingsPage() {
     let unsub: (() => void) | undefined;
 
     const mode =
-      (localStorage.getItem("authMode") as "guest" | "user" | null) ?? "guest";
+      (localStorage.getItem("authMode") as "guest" | "user" | null) ??
+      "guest";
 
     if (mode === "guest") {
       loadProfile("guest").catch((err) => {
@@ -98,7 +99,6 @@ export function SettingsPage() {
     return () => {
       if (unsub) unsub();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleSave = async () => {
@@ -140,9 +140,7 @@ export function SettingsPage() {
       {/* Header */}
       <div className="space-y-1">
         <h1 className="text-2xl font-semibold">{t("settings.title")}</h1>
-        <p className="text-sm text-zinc-500">
-          {t("settings.subtitle")}
-        </p>
+        <p className="text-sm text-zinc-500">{t("settings.subtitle")}</p>
       </div>
 
       {/* Feedback */}
@@ -213,6 +211,26 @@ export function SettingsPage() {
           <p className="text-xs text-zinc-500">
             {t("settings.language.description")}
           </p>
+        </CardContent>
+      </Card>
+
+      {/* Feature-Übersicht */}
+      <Card>
+        <CardHeader>
+          <CardTitle>{t("settings.features.title")}</CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-3 text-sm text-zinc-600">
+          <p>{t("settings.features.intro")}</p>
+          <ul className="list-disc pl-5 space-y-1">
+            <li>{t("settings.features.items.customerCrud")}</li>
+            <li>{t("settings.features.items.customerStatus")}</li>
+            <li>{t("settings.features.items.filtering")}</li>
+            <li>{t("settings.features.items.responsive")}</li>
+            <li>{t("settings.features.items.auth")}</li>
+            <li>{t("settings.features.items.separation")}</li>
+            <li>{t("settings.features.items.profile")}</li>
+            <li>{t("settings.features.items.language")}</li>
+          </ul>
         </CardContent>
       </Card>
 

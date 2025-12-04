@@ -62,9 +62,7 @@ export function CustomerForm({
       phone,
     };
 
-    // Status nur explizit mitschicken, wenn es einen gibt:
-    // - im Edit-Modus (User kann ihn ändern)
-    // - oder initial bereits gesetzt war
+   
     if (isEdit || initial.status) {
       data.status = status;
     }

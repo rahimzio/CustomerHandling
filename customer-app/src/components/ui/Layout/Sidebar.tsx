@@ -4,6 +4,7 @@ import { signOut } from "firebase/auth";
 import { auth } from "../../../firebase";
 import { useLanguage } from "../../../context/LanguageContext";
 import { Button } from "../button";
+import { Home } from "lucide-react";
 
 interface SidebarProps {
   isOpen: boolean;
@@ -28,7 +29,7 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
   const handleLogout = async () => {
     try {
       await signOut(auth);
-    } catch {}
+    } catch { }
     localStorage.removeItem("authMode");
     navigate("/");
     onClose();
@@ -63,14 +64,13 @@ export function Sidebar({ isOpen, onClose }: SidebarProps) {
               <Button
                 key={link.path}
                 variant={isActive ? "default" : "ghost"}
-                className={`w-full justify-start text-sm flex items-center gap-2 ${
-                  isActive
-                    ? "bg-zinc-900 text-white hover:bg-zinc-900"
-                    : "text-zinc-600 hover:bg-zinc-100"
-                }`}
+                className={`w-full justify-start text-sm flex items-center gap-2 ${isActive
+                    ? "bg-zinc-900 text-white border border-indigo-500"
+                    : "bg-zinc-900 text-zinc-400 hover:bg-zinc-800 hover:text-white"
+                  }`}
                 onClick={() => handleNavigate(link.path)}
               >
-                {link.isHome && <span>🏠</span>}
+                {link.isHome && <Home className="h-4 w-4" />}
                 <span>{link.label}</span>
               </Button>
             );

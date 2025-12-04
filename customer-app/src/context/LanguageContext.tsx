@@ -1,12 +1,11 @@
 // src/context/LanguageContext.tsx
-import React, {
+import {
   createContext,
   useContext,
   useEffect,
   useState,
-    type ReactNode,
+  type ReactNode,
 } from "react";
-
 export type LanguageCode = "de" | "en";
 
 interface LanguageContextValue {
@@ -19,7 +18,6 @@ const LanguageContext = createContext<LanguageContextValue | undefined>(
   undefined
 );
 
-// einfache Schlüssel-basierte Übersetzungen
 const translations: Record<LanguageCode, Record<string, string>> = {
   de: {
     // Common
@@ -74,7 +72,7 @@ const translations: Record<LanguageCode, Record<string, string>> = {
       "Sind Sie sicher, dass Sie diesen Kunden löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden.",
     "customers.dialog.deleteConfirm": "Löschen bestätigen",
 
-    // Settings
+    // Settings – allgemeine Einstellungen
     "settings.title": "Einstellungen",
     "settings.subtitle":
       "Verwalten Sie Ihre Profilinformationen und die Sprache der Anwendung.",
@@ -93,6 +91,27 @@ const translations: Record<LanguageCode, Record<string, string>> = {
     "settings.loading": "Einstellungen werden geladen...",
     "settings.saveSuccess": "Einstellungen wurden gespeichert.",
     "settings.saveError": "Einstellungen konnten nicht gespeichert werden.",
+
+    // Settings – Feature-Übersicht
+    "settings.features.title": "Funktionsübersicht",
+    "settings.features.intro":
+      "Hier findest du eine kurze Übersicht über die wichtigsten Funktionen dieser App.",
+    "settings.features.items.customerCrud":
+      "Kunden anlegen, bearbeiten, anzeigen und löschen",
+    "settings.features.items.customerStatus":
+      "Kundenstatus (aktiv / inaktiv) und Kennzahlen im Dashboard",
+    "settings.features.items.filtering":
+      "Suche und Filter nach Kundentyp, Status und Land im Kundenbereich",
+    "settings.features.items.responsive":
+      "Optimierte Darstellung für Desktop und Mobilgeräte (Tabelle & Kartenansicht)",
+    "settings.features.items.auth":
+      "Anmeldung mit E-Mail & Passwort, Google oder als Gast zum Testen der App",
+    "settings.features.items.separation":
+      "Getrennte Kundendaten für Gast-Zugang und persönliche Benutzerkonten",
+    "settings.features.items.profile":
+      "Profilinformationen speichern und Initialen oben rechts im Header anzeigen",
+    "settings.features.items.language":
+      "Oberflächensprache bequem zwischen Deutsch und Englisch umschalten",
   },
 
   en: {
@@ -108,7 +127,7 @@ const translations: Record<LanguageCode, Record<string, string>> = {
     "sidebar.settings": "Settings",
     "sidebar.logout": "Log out",
 
-    // Topbar / Seiten
+    // Topbar / Pages
     "page.customers": "Customers",
     "page.settings": "Settings",
     "page.overview": "Overview",
@@ -148,7 +167,7 @@ const translations: Record<LanguageCode, Record<string, string>> = {
       "Are you sure you want to delete this customer? This action cannot be undone.",
     "customers.dialog.deleteConfirm": "Confirm deletion",
 
-    // Settings
+    // Settings – general
     "settings.title": "Settings",
     "settings.subtitle":
       "Manage your profile information and the application language.",
@@ -167,6 +186,27 @@ const translations: Record<LanguageCode, Record<string, string>> = {
     "settings.loading": "Loading settings...",
     "settings.saveSuccess": "Settings have been saved.",
     "settings.saveError": "Settings could not be saved.",
+
+    // Settings – feature overview
+    "settings.features.title": "Feature overview",
+    "settings.features.intro":
+      "Here is a short overview of the most important features of this app.",
+    "settings.features.items.customerCrud":
+      "Create, edit, view and delete customers",
+    "settings.features.items.customerStatus":
+      "Customer status (active / inactive) and KPIs in the dashboard",
+    "settings.features.items.filtering":
+      "Search and filter customers by type, status and country",
+    "settings.features.items.responsive":
+      "Responsive layout for desktop and mobile (table and card view)",
+    "settings.features.items.auth":
+      "Sign in with email & password, Google or continue as guest to test the app",
+    "settings.features.items.separation":
+      "Separate customer data for the guest account and personal user accounts",
+    "settings.features.items.profile":
+      "Save profile information and show your initials in the top-right header",
+    "settings.features.items.language":
+      "Easily switch the UI language between German and English",
   },
 };
 
@@ -188,7 +228,6 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const t = (key: string) => {
     const value = translations[language][key];
     if (value) return value;
-    // Fallback: deutsch oder Key
     return translations.de[key] ?? key;
   };
 

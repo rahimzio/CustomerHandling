@@ -59,7 +59,6 @@ export function CustomersPage() {
     })();
   }, [collectionName]);
 
-  // Länder-Liste für Filter (einzigartige, sortierte Länder)
   const countryOptions = Array.from(
     new Set(
       customers
@@ -69,7 +68,6 @@ export function CustomersPage() {
   ).sort((a, b) => a.localeCompare(b));
 
   const filtered = customers.filter((c) => {
-    // Name-Filter (Suche)
     const name =
       c.type === "company"
         ? c.companyName ?? ""
@@ -80,18 +78,15 @@ export function CustomersPage() {
 
     if (!matchesSearch) return false;
 
-    // Typ-Filter
     if (filterType !== "all" && c.type !== filterType) {
       return false;
     }
 
-    // Status-Filter
     const status = (c.status ?? "active") as "active" | "inactive";
     if (filterStatus !== "all" && status !== filterStatus) {
       return false;
     }
 
-    // Länder-Filter
     if (
       filterCountry !== "all" &&
       (c.country ?? "").trim() !== filterCountry
@@ -109,7 +104,6 @@ export function CustomersPage() {
     setDeleteId(null);
   };
 
-  // KPI-Berechnungen
   const total = customers.length;
 
   const active = customers.filter(
@@ -296,9 +290,9 @@ export function CustomersPage() {
                             {/* Aktionen */}
                             <TableCell className="text-right space-x-1 sm:space-x-2">
                               <Button
-                                variant="default"
+                                variant="ghost"
                                 size="icon"
-                                className="bg-zinc-900 text-white border border-zinc-900 hover:bg-white hover:text-zinc-900"
+                                className="bg-zinc-900 text-white border border-zinc-900 hover:bg-zinc-800 hover:text-white"
                                 onClick={() => navigate(`/customers/${c.id}`)}
                                 aria-label="Details anzeigen"
                               >
@@ -307,7 +301,7 @@ export function CustomersPage() {
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="bg-zinc-900 text-white border border-zinc-900 hover:bg-white hover:text-zinc-900"
+                                className="bg-zinc-900 text-white border border-zinc-900 hover:bg-zinc-800 hover:text-white"
                                 onClick={() => navigate(`/customers/${c.id}/edit`)}
                                 aria-label="Bearbeiten"
                               >
@@ -316,13 +310,14 @@ export function CustomersPage() {
                               <Button
                                 variant="ghost"
                                 size="icon"
-                                className="bg-zinc-900 text-red-500 border border-zinc-900 hover:bg-white hover:text-red-500"
+                                className="bg-zinc-900 text-red-500 border border-zinc-900 hover:bg-zinc-800 hover:text-red-500"
                                 onClick={() => setDeleteId(c.id!)}
                                 aria-label="Löschen"
                               >
                                 🗑
                               </Button>
                             </TableCell>
+
                           </TableRow>
                         );
                       })
@@ -402,42 +397,33 @@ export function CustomersPage() {
                     </div>
 
                     {/* Aktionen */}
-                    <div className="pt-3 border-t border-zinc-100 flex items-center justify-between gap-2">
-                      <div className="text-xs text-zinc-400">
-                        {t("customers.table.actions")}
-                      </div>
-                      <div className="space-x-1">
-                        <Button
-                          variant="default"
-                          size="icon-sm"
-                          className="bg-zinc-900 text-white border border-zinc-900 hover:bg-white hover:text-zinc-900"
-                          onClick={() => navigate(`/customers/${c.id}`)}
-                          aria-label="Details anzeigen"
-                        >
-                          👁
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon-sm"
-                          className="bg-zinc-900 text-white border border-zinc-900 hover:bg-white hover:text-zinc-900"
-                          onClick={() =>
-                            navigate(`/customers/${c.id}/edit`)
-                          }
-                          aria-label="Bearbeiten"
-                        >
-                          ✏️
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon-sm"
-                          className="bg-zinc-900 text-red-500 border border-zinc-900 hover:bg-white hover:text-red-500"
-                          onClick={() => setDeleteId(c.id!)}
-                          aria-label="Löschen"
-                        >
-                          🗑
-                        </Button>
-                      </div>
+                    <div className="space-x-1">
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        className="bg-zinc-900 text-white border border-zinc-900 hover:bg-zinc-800 hover:text-white"
+                        onClick={() => navigate(`/customers/${c.id}`)}
+                      >
+                        👁
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        className="bg-zinc-900 text-white border border-zinc-900 hover:bg-zinc-800 hover:text-white"
+                        onClick={() => navigate(`/customers/${c.id}/edit`)}
+                      >
+                        ✏️
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon-sm"
+                        className="bg-zinc-900 text-red-500 border border-zinc-900 hover:bg-zinc-800 hover:text-red-500"
+                        onClick={() => setDeleteId(c.id!)}
+                      >
+                        🗑
+                      </Button>
                     </div>
+
                   </CardContent>
                 </Card>
               );
@@ -470,8 +456,8 @@ export function CustomersPage() {
                   type="button"
                   onClick={() => setFilterType("all")}
                   className={`px-3 py-1.5 rounded-md text-sm border transition ${filterType === "all"
-                      ? "bg-zinc-900 text-white border-zinc-900"
-                      : "bg-white text-zinc-400 border-zinc-200 hover:text-zinc-600"
+                    ? "bg-zinc-900 text-white border-zinc-900"
+                    : "bg-white text-zinc-400 border-zinc-200 hover:text-zinc-600"
                     }`}
                 >
                   {t("customers.filter.all")}
@@ -480,8 +466,8 @@ export function CustomersPage() {
                   type="button"
                   onClick={() => setFilterType("private")}
                   className={`px-3 py-1.5 rounded-md text-sm border transition ${filterType === "private"
-                      ? "bg-zinc-900 text-white border-zinc-900"
-                      : "bg-white text-zinc-400 border-zinc-200 hover:text-zinc-600"
+                    ? "bg-zinc-900 text-white border-zinc-900"
+                    : "bg-white text-zinc-400 border-zinc-200 hover:text-zinc-600"
                     }`}
                 >
                   {t("customers.type.private")}
@@ -490,8 +476,8 @@ export function CustomersPage() {
                   type="button"
                   onClick={() => setFilterType("company")}
                   className={`px-3 py-1.5 rounded-md text-sm border transition ${filterType === "company"
-                      ? "bg-zinc-900 text-white border-zinc-900"
-                      : "bg-white text-zinc-400 border-zinc-200 hover:text-zinc-600"
+                    ? "bg-zinc-900 text-white border-zinc-900"
+                    : "bg-white text-zinc-400 border-zinc-200 hover:text-zinc-600"
                     }`}
                 >
                   {t("customers.type.company")}
@@ -509,8 +495,8 @@ export function CustomersPage() {
                   type="button"
                   onClick={() => setFilterStatus("all")}
                   className={`px-3 py-1.5 rounded-md text-sm border transition ${filterStatus === "all"
-                      ? "bg-zinc-900 text-white border-zinc-900"
-                      : "bg-white text-zinc-400 border-zinc-200 hover:text-zinc-600"
+                    ? "bg-zinc-900 text-white border-zinc-900"
+                    : "bg-white text-zinc-400 border-zinc-200 hover:text-zinc-600"
                     }`}
                 >
                   {t("customers.filter.all")}
@@ -519,8 +505,8 @@ export function CustomersPage() {
                   type="button"
                   onClick={() => setFilterStatus("active")}
                   className={`px-3 py-1.5 rounded-md text-sm border transition ${filterStatus === "active"
-                      ? "bg-zinc-900 text-white border-zinc-900"
-                      : "bg-white text-zinc-400 border-zinc-200 hover:text-zinc-600"
+                    ? "bg-zinc-900 text-white border-zinc-900"
+                    : "bg-white text-zinc-400 border-zinc-200 hover:text-zinc-600"
                     }`}
                 >
                   {t("customers.status.active")}
@@ -529,8 +515,8 @@ export function CustomersPage() {
                   type="button"
                   onClick={() => setFilterStatus("inactive")}
                   className={`px-3 py-1.5 rounded-md text-sm border transition ${filterStatus === "inactive"
-                      ? "bg-zinc-900 text-white border-zinc-900"
-                      : "bg-white text-zinc-400 border-zinc-200 hover:text-zinc-600"
+                    ? "bg-zinc-900 text-white border-zinc-900"
+                    : "bg-white text-zinc-400 border-zinc-200 hover:text-zinc-600"
                     }`}
                 >
                   {t("customers.status.inactive")}
@@ -562,7 +548,7 @@ export function CustomersPage() {
 
           <DialogFooter className="mt-4 flex flex-col sm:flex-row sm:justify-end gap-2">
             <Button
-              variant="outline"
+              variant="default"
               className="w-full sm:w-auto"
               onClick={() => {
                 resetFilters();

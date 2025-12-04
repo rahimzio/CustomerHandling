@@ -14,7 +14,6 @@ import type { Customer } from "../types/customer";
 const getCustomerCollection = (collectionName: string) =>
   collection(db, collectionName);
 
-// Hilfsfunktion: Firestore-Dokument → Customer mit Defaults
 const mapFirestoreDocToCustomer = (d: any): Customer => {
   const data = d.data() as any;
 
@@ -87,8 +86,6 @@ export async function updateCustomer(
 ) {
   const docRef = doc(db, collectionName, id);
 
-  // "id" nicht ins Dokument schreiben
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const { id: _id, ...rest } = data as any;
 
   await updateDoc(docRef, {

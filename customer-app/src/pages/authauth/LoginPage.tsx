@@ -34,7 +34,6 @@ export function LoginPage() {
         await createUserWithEmailAndPassword(auth, email, password);
       }
 
-      // "echter" User-Modus
       localStorage.setItem("authMode", "user");
 
       navigate("/customers");
@@ -63,7 +62,6 @@ export function LoginPage() {
     try {
       await signInWithPopup(auth, googleProvider);
 
-      // "echter" User-Modus
       localStorage.setItem("authMode", "user");
 
       navigate("/customers");
@@ -79,10 +77,8 @@ export function LoginPage() {
     setError(null);
     setIsLoading(true);
     try {
-      // sicherstellen, dass kein echter User eingeloggt bleibt
       await signOut(auth).catch(() => {});
 
-      // Gastmodus aktivieren
       localStorage.setItem("authMode", "guest");
 
       navigate("/customers");

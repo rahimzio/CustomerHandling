@@ -16,7 +16,6 @@ function App() {
   const authRoutes = ["/"];
   const isAuthRoute = authRoutes.includes(location.pathname);
 
-  // Login-/Gast-Seite ohne Sidebar/Topbar
   if (isAuthRoute) {
     return (
       <div className="min-h-screen w-full flex items-center justify-center bg-zinc-50 overflow-x-hidden">
@@ -27,23 +26,19 @@ function App() {
 
   return (
     <div className="min-h-screen w-full bg-zinc-50 flex flex-col md:flex-row overflow-x-hidden">
-      {/* Sidebar links */}
       <Sidebar
         isOpen={sidebarOpen}
         onClose={() => setSidebarOpen(false)}
       />
 
-      {/* Inhalt rechts */}
       <div className="flex-1 flex flex-col">
         <Topbar
           onToggleSidebar={() => setSidebarOpen((prev) => !prev)}
         />
 
         <main className="flex-1 overflow-y-auto px-4 py-4 sm:px-6 lg:px-8">
-          {/* zentrierter Container, damit es im Vollbild nicht „zu breit“ wird */}
           <div className="w-full max-w-6xl mx-auto">
             <Routes>
-              {/* Hauptbereich der App */}
               <Route path="/customers" element={<CustomersPage />} />
               <Route path="/customers/new" element={<CustomerFormPage />} />
               <Route
@@ -56,7 +51,6 @@ function App() {
               />
               <Route path="/settings" element={<SettingsPage />} />
 
-              {/* Fallback: Unbekannte Routen -> Kundenliste */}
               <Route
                 path="*"
                 element={<Navigate to="/customers" replace />}
