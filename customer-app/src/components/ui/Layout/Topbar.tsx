@@ -7,6 +7,7 @@ import { doc, getDoc } from "firebase/firestore";
 import { useLanguage } from "../../../context/LanguageContext";
 
 interface TopbarProps {
+  // Triggered when user taps the menu button (mobile)
   onToggleSidebar: () => void;
 }
 
@@ -21,15 +22,18 @@ export function Topbar({ onToggleSidebar }: TopbarProps) {
   const { t } = useLanguage();
   const [initials, setInitials] = useState<string>("");
 
+  // Localized breadcrumb page title
   const currentPage = getPageTitle(location.pathname, t);
 
   useEffect(() => {
     let active = true;
     let unsub: (() => void) | undefined;
 
+    // Determine if we are in guest or user mode
     const mode =
       (localStorage.getItem("authMode") as "guest" | "user" | null) ?? "guest";
 
+    // Load profile initials based on profile id and optional email
     const loadAndSetInitials = async (
       profileId: string,
       emailHint?: string | null
@@ -54,13 +58,16 @@ export function Topbar({ onToggleSidebar }: TopbarProps) {
       } catch (err) {
         console.error(err);
         if (!active) return;
+        // Fallback to generic initial for guest
         setInitials("G");
       }
     };
 
+    // For guests, always use "guest" profile
     if (mode === "guest") {
       loadAndSetInitials("guest", null);
     } else {
+      // For logged-in users, listen to auth changes and load profile
       unsub = onAuthStateChanged(auth, (user) => {
         if (!active) return;
 
@@ -72,6 +79,7 @@ export function Topbar({ onToggleSidebar }: TopbarProps) {
       });
     }
 
+    // Cleanup on unmount / effect re-run
     return () => {
       active = false;
       if (unsub) unsub();
@@ -80,6 +88,7 @@ export function Topbar({ onToggleSidebar }: TopbarProps) {
 
   return (
     <header className="h-14 border-b bg-white flex items-center justify-between px-4 sm:px-6">
+      {/* Left side: menu toggle (mobile) + breadcrumb */}
       <div className="flex items-center gap-3">
         <button
           type="button"
@@ -97,6 +106,7 @@ export function Topbar({ onToggleSidebar }: TopbarProps) {
         </div>
       </div>
 
+      {/* Right side: user initials avatar */}
       <div className="flex items-center gap-3">
         <div className="w-8 h-8 rounded-full bg-zinc-900 text-white flex items-center justify-center text-xs font-semibold uppercase">
           {initials || "G"}
@@ -106,12 +116,14 @@ export function Topbar({ onToggleSidebar }: TopbarProps) {
   );
 }
 
+// Map current route to a translated page title
 function getPageTitle(pathname: string, t: (k: string) => string): string {
   if (pathname.startsWith("/settings")) return t("page.settings");
   if (pathname.startsWith("/customers")) return t("page.customers");
   return t("page.overview");
 }
 
+// Compute two-letter initials from profile data or email
 function computeInitials(
   firstName?: string,
   lastName?: string,
@@ -120,20 +132,24 @@ function computeInitials(
   const f = (firstName ?? "").trim();
   const l = (lastName ?? "").trim();
 
+  // Full first + last name
   if (f && l) {
     return (f[0] + l[0]).toUpperCase();
   }
 
+  // Only first name available
   if (f) {
     if (f.length >= 2) return f.slice(0, 2).toUpperCase();
     return f[0].toUpperCase();
   }
 
+  // Derive initials from email prefix if possible
   if (email) {
     const namePart = email.split("@")[0] ?? "";
     if (namePart.length >= 2) return namePart.slice(0, 2).toUpperCase();
     if (namePart.length === 1) return namePart.toUpperCase();
   }
 
+  // Default fallback
   return "G";
 }

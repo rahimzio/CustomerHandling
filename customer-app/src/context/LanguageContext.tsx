@@ -6,18 +6,24 @@ import {
   useState,
   type ReactNode,
 } from "react";
+
 export type LanguageCode = "de" | "en";
 
 interface LanguageContextValue {
+  // Currently active language
   language: LanguageCode;
+  // Update language and persist it
   setLanguage: (lang: LanguageCode) => void;
+  // Translation helper function
   t: (key: string) => string;
 }
 
+// React context for language and translations
 const LanguageContext = createContext<LanguageContextValue | undefined>(
   undefined
 );
 
+// Static translation dictionary for all supported languages
 const translations: Record<LanguageCode, Record<string, string>> = {
   de: {
     // Common
@@ -210,9 +216,11 @@ const translations: Record<LanguageCode, Record<string, string>> = {
   },
 };
 
+// Provides language state and translation function to the app
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [language, setLanguageState] = useState<LanguageCode>("de");
 
+  // Load persisted language from localStorage on first render
   useEffect(() => {
     const stored = localStorage.getItem("appLanguage") as LanguageCode | null;
     if (stored === "de" || stored === "en") {
@@ -220,14 +228,17 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
     }
   }, []);
 
+  // Update language and persist choice
   const setLanguage = (lang: LanguageCode) => {
     setLanguageState(lang);
     localStorage.setItem("appLanguage", lang);
   };
 
+  // Translate a key into the current language with fallback
   const t = (key: string) => {
     const value = translations[language][key];
     if (value) return value;
+    // Fallback to German or the key itself if missing
     return translations.de[key] ?? key;
   };
 
@@ -238,6 +249,7 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   );
 }
 
+// Hook to consume language context in components
 export function useLanguage() {
   const ctx = useContext(LanguageContext);
   if (!ctx) {

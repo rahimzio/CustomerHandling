@@ -23,16 +23,20 @@ interface UserProfile {
 export function SettingsPage() {
   const { language, setLanguage, t } = useLanguage();
 
+  // Current profile document id (user uid or "guest")
   const [profileId, setProfileId] = useState<string | null>(null);
 
+  // Profile form state
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
 
+  // UI state
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Load profile data for given id, optionally using email as a name hint
   const loadProfile = async (id: string, emailHint?: string | null) => {
     const ref = doc(db, "profiles", id);
     const snap = await getDoc(ref);
@@ -42,6 +46,7 @@ export function SettingsPage() {
       data = snap.data() as UserProfile;
     }
 
+    // Determine language: profile -> localStorage -> default "de"
     const profileLang: LanguageCode =
       data?.language ??
       (localStorage.getItem("appLanguage") as LanguageCode) ??
@@ -50,6 +55,7 @@ export function SettingsPage() {
     setFirstName(data?.firstName ?? "");
     setLastName(data?.lastName ?? "");
 
+    // If no name saved yet, try to infer from email (before "@")
     if (!data?.firstName && emailHint) {
       const namePart = emailHint.split("@")[0];
       if (namePart) {
@@ -68,10 +74,12 @@ export function SettingsPage() {
   useEffect(() => {
     let unsub: (() => void) | undefined;
 
+    // Read auth mode (guest vs user) from localStorage
     const mode =
       (localStorage.getItem("authMode") as "guest" | "user" | null) ??
       "guest";
 
+    // Guest mode always uses a shared "guest" profile
     if (mode === "guest") {
       loadProfile("guest").catch((err) => {
         console.error(err);
@@ -79,14 +87,17 @@ export function SettingsPage() {
         setLoading(false);
       });
     } else {
+      // In user mode, listen to Firebase auth state
       unsub = onAuthStateChanged(auth, (user) => {
         if (user) {
+          // Logged-in user: load personal profile by uid
           loadProfile(user.uid, user.email).catch((err) => {
             console.error(err);
             setError(t("settings.saveError"));
             setLoading(false);
           });
         } else {
+          // No user: fall back to guest profile
           loadProfile("guest").catch((err) => {
             console.error(err);
             setError(t("settings.saveError"));
@@ -96,11 +107,13 @@ export function SettingsPage() {
       });
     }
 
+    // Cleanup auth listener on unmount
     return () => {
       if (unsub) unsub();
     };
   }, []);
 
+  // Persist profile changes to Firestore
   const handleSave = async () => {
     if (!profileId) return;
     setSaving(true);
@@ -127,6 +140,7 @@ export function SettingsPage() {
     }
   };
 
+  // Simple loading state while profile is being fetched
   if (loading) {
     return (
       <div className="px-4 py-6 text-sm text-zinc-500">
@@ -143,7 +157,7 @@ export function SettingsPage() {
         <p className="text-sm text-zinc-500">{t("settings.subtitle")}</p>
       </div>
 
-      {/* Feedback */}
+      {/* Feedback messages */}
       {error && (
         <div className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-md px-3 py-2">
           {error}
@@ -155,7 +169,7 @@ export function SettingsPage() {
         </div>
       )}
 
-      {/* Profilinformationen */}
+      {/* Profile information */}
       <Card>
         <CardHeader>
           <CardTitle>{t("settings.profile.title")}</CardTitle>
@@ -189,7 +203,7 @@ export function SettingsPage() {
         </CardContent>
       </Card>
 
-      {/* Sprache */}
+      {/* Language settings */}
       <Card>
         <CardHeader>
           <CardTitle>{t("settings.language.title")}</CardTitle>
@@ -214,7 +228,7 @@ export function SettingsPage() {
         </CardContent>
       </Card>
 
-      {/* Feature-Übersicht */}
+      {/* Feature overview */}
       <Card>
         <CardHeader>
           <CardTitle>{t("settings.features.title")}</CardTitle>
@@ -234,7 +248,7 @@ export function SettingsPage() {
         </CardContent>
       </Card>
 
-      {/* Speichern-Button */}
+      {/* Save button */}
       <div className="flex justify-end">
         <Button onClick={handleSave} disabled={saving}>
           {saving ? "..." : t("settings.save")}
@@ -244,6 +258,7 @@ export function SettingsPage() {
   );
 }
 
+// Capitalize first letter and lowercase the rest
 function capitalize(value: string) {
   if (!value) return value;
   return value.charAt(0).toUpperCase() + value.slice(1).toLowerCase();

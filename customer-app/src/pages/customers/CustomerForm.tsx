@@ -21,16 +21,19 @@ export function CustomerForm({
   submitLabel,
   isEdit,
 }: CustomerFormProps) {
+  // Customer type (private or company)
   const [type, setType] = useState<CustomerType>(
     (initial.type as CustomerType) ?? "private"
   );
 
+  // Name fields
   const [firstName, setFirstName] = useState(initial.firstName ?? "");
   const [lastName, setLastName] = useState(initial.lastName ?? "");
   const [companyName, setCompanyName] = useState(
     initial.companyName ?? ""
   );
 
+  // Address fields
   const [street, setStreet] = useState(initial.street ?? "");
   const [postalCode, setPostalCode] = useState(
     initial.postalCode ?? ""
@@ -38,13 +41,16 @@ export function CustomerForm({
   const [city, setCity] = useState(initial.city ?? "");
   const [country, setCountry] = useState(initial.country ?? "");
 
+  // Contact fields
   const [email, setEmail] = useState(initial.email ?? "");
   const [phone, setPhone] = useState(initial.phone ?? "");
 
+  // Activity status (only editable in edit mode)
   const [status, setStatus] = useState<CustomerStatus>(
     (initial.status as CustomerStatus) ?? "active"
   );
 
+  // Collect form values and pass them to parent handler
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
 
@@ -62,7 +68,7 @@ export function CustomerForm({
       phone,
     };
 
-   
+    // Only send status when editing or when it already exists
     if (isEdit || initial.status) {
       data.status = status;
     }
@@ -75,7 +81,7 @@ export function CustomerForm({
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Kundentyp-Toggle */}
+      {/* Customer type toggle */}
       <div className="space-y-2">
         <div className="text-sm font-medium text-zinc-700">
           Kundentyp *
@@ -107,7 +113,7 @@ export function CustomerForm({
         </div>
       </div>
 
-      {/* Status – nur im Edit-Modus anzeigen */}
+      {/* Status toggle – only visible in edit mode */}
       {isEdit && (
         <div className="space-y-2">
           <div className="text-sm font-medium text-zinc-700">
@@ -140,7 +146,7 @@ export function CustomerForm({
         </div>
       )}
 
-      {/* Felder für Privatperson */}
+      {/* Fields for private customers */}
       {showPrivateFields && (
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -166,7 +172,7 @@ export function CustomerForm({
         </div>
       )}
 
-      {/* Felder für Unternehmen */}
+      {/* Fields for companies */}
       {showCompanyFields && (
         <div className="space-y-2">
           <label className="block text-sm font-medium text-zinc-700 mb-1">
@@ -180,7 +186,7 @@ export function CustomerForm({
         </div>
       )}
 
-      {/* Kontakt */}
+      {/* Contact section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-zinc-700 mb-1">
@@ -204,7 +210,7 @@ export function CustomerForm({
         </div>
       </div>
 
-      {/* Adresse */}
+      {/* Address section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div>
           <label className="block text-sm font-medium text-zinc-700 mb-1">
@@ -248,7 +254,7 @@ export function CustomerForm({
         </div>
       </div>
 
-      {/* Submit */}
+      {/* Submit button */}
       <div className="flex justify-end">
         <Button type="submit">{submitLabel}</Button>
       </div>

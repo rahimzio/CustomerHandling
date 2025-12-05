@@ -36,10 +36,14 @@ import { useLanguage } from "../../context/LanguageContext";
 export function CustomersPage() {
   const { t } = useLanguage();
 
+  // Raw customer list loaded from Firestore
   const [customers, setCustomers] = useState<Customer[]>([]);
+  // Text for name search
   const [search, setSearch] = useState("");
+  // ID of customer currently selected for deletion
   const [deleteId, setDeleteId] = useState<string | null>(null);
 
+  // Filter state
   const [isFilterOpen, setIsFilterOpen] = useState(false);
   const [filterType, setFilterType] = useState<"all" | "private" | "company">(
     "all"
@@ -50,8 +54,10 @@ export function CustomersPage() {
   const [filterCountry, setFilterCountry] = useState<string>("all");
 
   const navigate = useNavigate();
+  // Resolve the user-specific or public collection name
   const collectionName = useCustomerCollectionName();
 
+  // Load customers whenever the collection name changes
   useEffect(() => {
     (async () => {
       const data = await getCustomers(collectionName);
@@ -59,6 +65,7 @@ export function CustomersPage() {
     })();
   }, [collectionName]);
 
+  // Build unique country options for the country filter
   const countryOptions = Array.from(
     new Set(
       customers
@@ -67,6 +74,7 @@ export function CustomersPage() {
     )
   ).sort((a, b) => a.localeCompare(b));
 
+  // Apply search and filter logic to the customer list
   const filtered = customers.filter((c) => {
     const name =
       c.type === "company"
@@ -97,6 +105,7 @@ export function CustomersPage() {
     return true;
   });
 
+  // Delete the selected customer and update local state
   const handleConfirmDelete = async () => {
     if (!deleteId) return;
     await deleteCustomer(collectionName, deleteId);
@@ -104,6 +113,7 @@ export function CustomersPage() {
     setDeleteId(null);
   };
 
+  // KPI values
   const total = customers.length;
 
   const active = customers.filter(
@@ -120,12 +130,14 @@ export function CustomersPage() {
     );
   }).length;
 
+  // Reset all filters to default
   const resetFilters = () => {
     setFilterType("all");
     setFilterStatus("all");
     setFilterCountry("all");
   };
 
+  // Small helper to render status as a colored badge
   const renderStatusBadge = (status: Customer["status"] | undefined) => {
     const current = status ?? "active";
     return (
@@ -147,7 +159,7 @@ export function CustomersPage() {
   return (
     <>
       <div className="w-full px-0 space-y-6">
-        {/* Header */}
+        {/* Header with title and create button */}
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <h1 className="text-2xl font-semibold">
             {t("customers.title")}
@@ -160,7 +172,7 @@ export function CustomersPage() {
           </Button>
         </div>
 
-        {/* KPI-Karten */}
+        {/* KPI cards: total, active, new this month */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <Card>
             <CardHeader>
@@ -196,7 +208,7 @@ export function CustomersPage() {
           </Card>
         </div>
 
-        {/* Suchleiste + Filter-Button */}
+        {/* Search input + filter button */}
         <div className="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
           <Input
             placeholder={t("customers.searchPlaceholder")}
@@ -210,7 +222,7 @@ export function CustomersPage() {
             className="sm:w-auto flex items-center gap-2"
             onClick={() => setIsFilterOpen(true)}
           >
-            {/* Trichter-Icon */}
+            {/* Filter icon */}
             <span className="inline-flex items-center justify-center">
               <svg
                 className="w-4 h-4"
@@ -230,7 +242,7 @@ export function CustomersPage() {
           </Button>
         </div>
 
-        {/* Desktop: eine Tabelle mit sticky Header + scrollbarem Body */}
+        {/* Desktop: table view with sticky header */}
         <Card className="hidden md:block">
           <CardContent className="p-0">
             <div className="overflow-x-auto">
@@ -268,7 +280,7 @@ export function CustomersPage() {
                               {name}
                             </TableCell>
 
-                            {/* Typ */}
+                            {/* Type */}
                             <TableCell>
                               <Badge variant="outline">
                                 {c.type === "company"
@@ -277,7 +289,7 @@ export function CustomersPage() {
                               </Badge>
                             </TableCell>
 
-                            {/* Land */}
+                            {/* Country */}
                             <TableCell>
                               {c.country}
                             </TableCell>
@@ -287,7 +299,7 @@ export function CustomersPage() {
                               {renderStatusBadge(c.status)}
                             </TableCell>
 
-                            {/* Aktionen */}
+                            {/* Actions */}
                             <TableCell className="text-right space-x-1 sm:space-x-2">
                               <Button
                                 variant="ghost"
@@ -338,8 +350,7 @@ export function CustomersPage() {
           </CardContent>
         </Card>
 
-
-        {/* Mobile: Karten-Layout (statt Tabelle) */}
+        {/* Mobile: card layout instead of table */}
         <div className="space-y-3 md:hidden">
           {filtered.length > 0 ? (
             filtered.map((c) => {
@@ -356,7 +367,7 @@ export function CustomersPage() {
                   className={isInactive ? "bg-zinc-50" : "bg-white"}
                 >
                   <CardContent className="p-4 space-y-3">
-                    {/* Name + Typ */}
+                    {/* Name + type row */}
                     <div className="flex items-start justify-between gap-3">
                       <div className="flex-1">
                         <div className="text-sm text-zinc-500">
@@ -378,7 +389,7 @@ export function CustomersPage() {
                       </div>
                     </div>
 
-                    {/* Land + Status */}
+                    {/* Country + status row */}
                     <div className="flex items-start justify-between gap-3">
                       <div>
                         <div className="text-xs text-zinc-500">
@@ -396,7 +407,7 @@ export function CustomersPage() {
                       </div>
                     </div>
 
-                    {/* Aktionen */}
+                    {/* Actions row */}
                     <div className="space-x-1">
                       <Button
                         variant="ghost"
@@ -438,7 +449,7 @@ export function CustomersPage() {
         </div>
       </div>
 
-      {/* Filter-Dialog */}
+      {/* Filter dialog */}
       <Dialog open={isFilterOpen} onOpenChange={setIsFilterOpen}>
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
@@ -446,7 +457,7 @@ export function CustomersPage() {
           </DialogHeader>
 
           <div className="mt-4 space-y-4">
-            {/* Typ-Filter */}
+            {/* Type filter */}
             <div className="space-y-2">
               <div className="text-xs text-zinc-500">
                 {t("customers.filter.type")}
@@ -455,37 +466,40 @@ export function CustomersPage() {
                 <button
                   type="button"
                   onClick={() => setFilterType("all")}
-                  className={`px-3 py-1.5 rounded-md text-sm border transition ${filterType === "all"
-                    ? "bg-zinc-900 text-white border-zinc-900"
-                    : "bg-white text-zinc-400 border-zinc-200 hover:text-zinc-600"
-                    }`}
+                  className={`px-3 py-1.5 rounded-md text-sm border transition ${
+                    filterType === "all"
+                      ? "bg-zinc-900 text-white border-zinc-900"
+                      : "bg-white text-zinc-400 border-zinc-200 hover:text-zinc-600"
+                  }`}
                 >
                   {t("customers.filter.all")}
                 </button>
                 <button
                   type="button"
                   onClick={() => setFilterType("private")}
-                  className={`px-3 py-1.5 rounded-md text-sm border transition ${filterType === "private"
-                    ? "bg-zinc-900 text-white border-zinc-900"
-                    : "bg-white text-zinc-400 border-zinc-200 hover:text-zinc-600"
-                    }`}
+                  className={`px-3 py-1.5 rounded-md text-sm border transition ${
+                    filterType === "private"
+                      ? "bg-zinc-900 text-white border-zinc-900"
+                      : "bg-white text-zinc-400 border-zinc-200 hover:text-zinc-600"
+                  }`}
                 >
                   {t("customers.type.private")}
                 </button>
                 <button
                   type="button"
                   onClick={() => setFilterType("company")}
-                  className={`px-3 py-1.5 rounded-md text-sm border transition ${filterType === "company"
-                    ? "bg-zinc-900 text-white border-zinc-900"
-                    : "bg-white text-zinc-400 border-zinc-200 hover:text-zinc-600"
-                    }`}
+                  className={`px-3 py-1.5 rounded-md text-sm border transition ${
+                    filterType === "company"
+                      ? "bg-zinc-900 text-white border-zinc-900"
+                      : "bg-white text-zinc-400 border-zinc-200 hover:text-zinc-600"
+                  }`}
                 >
                   {t("customers.type.company")}
                 </button>
               </div>
             </div>
 
-            {/* Status-Filter */}
+            {/* Status filter */}
             <div className="space-y-2">
               <div className="text-xs text-zinc-500">
                 {t("customers.filter.status")}
@@ -494,37 +508,40 @@ export function CustomersPage() {
                 <button
                   type="button"
                   onClick={() => setFilterStatus("all")}
-                  className={`px-3 py-1.5 rounded-md text-sm border transition ${filterStatus === "all"
-                    ? "bg-zinc-900 text-white border-zinc-900"
-                    : "bg-white text-zinc-400 border-zinc-200 hover:text-zinc-600"
-                    }`}
+                  className={`px-3 py-1.5 rounded-md text-sm border transition ${
+                    filterStatus === "all"
+                      ? "bg-zinc-900 text-white border-zinc-900"
+                      : "bg-white text-zinc-400 border-zinc-200 hover:text-zinc-600"
+                  }`}
                 >
                   {t("customers.filter.all")}
                 </button>
                 <button
                   type="button"
                   onClick={() => setFilterStatus("active")}
-                  className={`px-3 py-1.5 rounded-md text-sm border transition ${filterStatus === "active"
-                    ? "bg-zinc-900 text-white border-zinc-900"
-                    : "bg-white text-zinc-400 border-zinc-200 hover:text-zinc-600"
-                    }`}
+                  className={`px-3 py-1.5 rounded-md text-sm border transition ${
+                    filterStatus === "active"
+                      ? "bg-zinc-900 text-white border-zinc-900"
+                      : "bg-white text-zinc-400 border-zinc-200 hover:text-zinc-600"
+                  }`}
                 >
                   {t("customers.status.active")}
                 </button>
                 <button
                   type="button"
                   onClick={() => setFilterStatus("inactive")}
-                  className={`px-3 py-1.5 rounded-md text-sm border transition ${filterStatus === "inactive"
-                    ? "bg-zinc-900 text-white border-zinc-900"
-                    : "bg-white text-zinc-400 border-zinc-200 hover:text-zinc-600"
-                    }`}
+                  className={`px-3 py-1.5 rounded-md text-sm border transition ${
+                    filterStatus === "inactive"
+                      ? "bg-zinc-900 text-white border-zinc-900"
+                      : "bg-white text-zinc-400 border-zinc-200 hover:text-zinc-600"
+                  }`}
                 >
                   {t("customers.status.inactive")}
                 </button>
               </div>
             </div>
 
-            {/* Länder-Filter */}
+            {/* Country filter */}
             <div className="space-y-2">
               <div className="text-xs text-zinc-500">
                 {t("customers.filter.country")}
@@ -567,7 +584,7 @@ export function CustomersPage() {
         </DialogContent>
       </Dialog>
 
-      {/* Delete-Dialog – mit shadcn, schön zentriert */}
+      {/* Delete confirmation dialog */}
       <Dialog
         open={!!deleteId}
         onOpenChange={(open) => {

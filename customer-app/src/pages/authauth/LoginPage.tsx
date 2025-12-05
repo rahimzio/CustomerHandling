@@ -14,14 +14,18 @@ import { Input } from "../../components/ui/input";
 export function LoginPage() {
   const navigate = useNavigate();
 
+  // Auth mode: login or register
   const [mode, setMode] = useState<"login" | "register">("login");
+  // Email / password inputs
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  // UI state
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const isLogin = mode === "login";
 
+  // Handle email/password login or registration
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -34,11 +38,14 @@ export function LoginPage() {
         await createUserWithEmailAndPassword(auth, email, password);
       }
 
+      // Mark user mode in localStorage so app uses private collections
       localStorage.setItem("authMode", "user");
 
+      // Redirect to customers dashboard
       navigate("/customers");
     } catch (err: any) {
       console.error("Auth error:", err?.code, err?.message, err);
+      // Map Firebase error codes to user-friendly messages
       let msg = "Es ist ein Fehler aufgetreten.";
       if (err?.code === "auth/user-not-found")
         msg = "Kein Benutzer mit dieser E-Mail gefunden.";
@@ -56,12 +63,14 @@ export function LoginPage() {
     }
   };
 
+  // Handle Google OAuth sign-in
   const handleGoogleLogin = async () => {
     setError(null);
     setIsLoading(true);
     try {
       await signInWithPopup(auth, googleProvider);
 
+      // Logged-in users use private collections
       localStorage.setItem("authMode", "user");
 
       navigate("/customers");
@@ -73,10 +82,12 @@ export function LoginPage() {
     }
   };
 
+  // Handle guest mode (no authenticated user, use public collections)
   const handleGuestLogin = async () => {
     setError(null);
     setIsLoading(true);
     try {
+      // Ensure we are fully signed out before guest mode
       await signOut(auth).catch(() => {});
 
       localStorage.setItem("authMode", "guest");
@@ -93,7 +104,7 @@ export function LoginPage() {
   return (
     <div className="w-full min-h-screen flex items-center justify-center bg-zinc-50 px-4">
       <div className="w-full max-w-md bg-white rounded-2xl shadow-md p-6 sm:p-8 space-y-6">
-        {/* Titel */}
+        {/* Title and short description */}
         <div className="space-y-1 text-center">
           <h1 className="text-2xl font-semibold">
             {isLogin ? "Anmelden" : "Registrieren"}
@@ -105,7 +116,7 @@ export function LoginPage() {
           </p>
         </div>
 
-        {/* Toggle Login / Registrierung */}
+        {/* Toggle between login and register mode */}
         <div className="flex justify-center gap-2 text-sm">
           <button
             type="button"
@@ -131,14 +142,14 @@ export function LoginPage() {
           </button>
         </div>
 
-        {/* Fehleranzeige */}
+        {/* Error message box */}
         {error && (
           <div className="text-sm text-red-600 bg-red-50 border border-red-100 rounded-md px-3 py-2">
             {error}
           </div>
         )}
 
-        {/* Formular */}
+        {/* Email/password form */}
         <form onSubmit={handleSubmit} className="space-y-4">
           <div className="space-y-1">
             <label className="text-sm font-medium text-zinc-700">
@@ -182,7 +193,7 @@ export function LoginPage() {
           </Button>
         </form>
 
-        {/* Divider */}
+        {/* Visual divider */}
         <div className="flex items-center gap-3">
           <div className="flex-1 h-px bg-zinc-200" />
           <span className="text-xs text-zinc-400 uppercase tracking-wide">
@@ -191,7 +202,7 @@ export function LoginPage() {
           <div className="flex-1 h-px bg-zinc-200" />
         </div>
 
-        {/* Google Login */}
+        {/* Google login button */}
         <Button
           type="button"
           variant="default"
@@ -199,7 +210,7 @@ export function LoginPage() {
           onClick={handleGoogleLogin}
           disabled={isLoading}
         >
-          {/* Google-Icon (bunter G-Kreis) */}
+          {/* Google icon */}
           <span className="inline-flex items-center justify-center rounded-full bg-white w-5 h-5">
             <svg
               viewBox="0 0 24 24"
@@ -227,7 +238,7 @@ export function LoginPage() {
           <span className="text-white">Mit Google anmelden</span>
         </Button>
 
-        {/* Gastzugang */}
+        {/* Guest mode button */}
         <Button
           type="button"
           variant="default"
@@ -239,7 +250,7 @@ export function LoginPage() {
           <span className="text-white">Als Gast fortfahren</span>
         </Button>
 
-        {/* Kleinere Footer-Info */}
+        {/* Small legal note */}
         <p className="text-xs text-zinc-400 text-center">
           Durch die Anmeldung akzeptieren Sie die Nutzungsbedingungen und
           Datenschutzrichtlinien.

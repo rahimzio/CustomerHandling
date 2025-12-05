@@ -12,14 +12,18 @@ import { useCustomerCollectionName } from "../../hook/useCustomerCollectionName"
 
 export function CustomerFormPage() {
   const navigate = useNavigate();
+  // Read :id from route params to detect edit mode
   const { id } = useParams<{ id: string }>();
   const isEdit = !!id;
 
+  // Holds initial form values (for edit or create)
   const [initial, setInitial] = useState<Partial<Customer> | null>(
     null
   );
+  // Resolve current Firestore collection name (user or public)
   const collectionName = useCustomerCollectionName();
 
+  // Load existing customer data when editing
   useEffect(() => {
     if (isEdit && id) {
       (async () => {
@@ -27,22 +31,28 @@ export function CustomerFormPage() {
         if (data) setInitial(data);
       })();
     } else {
+      // For new customers, start with empty initial values
       setInitial({});
     }
   }, [isEdit, id, collectionName]);
 
+  // Handle form submit for both create and update
   const handleSubmit = async (data: Partial<Customer>) => {
     if (isEdit && id) {
+      // Update existing customer
       await updateCustomer(collectionName, id, data);
     } else {
+      // Create new customer
       await createCustomer(
         collectionName,
         data as Omit<Customer, "id" | "createdAt" | "updatedAt">
       );
     }
+    // Go back to customer list after saving
     navigate("/customers");
   };
 
+  // Simple loading state while initial data is being fetched
   if (!initial) {
     return <div className="px-4 py-4">Kunde wird geladen...</div>;
   }
@@ -59,6 +69,7 @@ export function CustomerFormPage() {
         </p>
       </div>
 
+      {/* Main customer form wrapper */}
       <div className="max-w-3xl mx-auto">
         <CustomerForm
           initial={initial}

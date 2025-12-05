@@ -13,10 +13,16 @@ import { Badge } from "../../components/ui/badge";
 import { useCustomerCollectionName } from "../../hook/useCustomerCollectionName";
 
 export function CustomerDetailPage() {
+  // Read customer id from route params
   const { id } = useParams<{ id: string }>();
+
+  // Holds the loaded customer or null while loading
   const [customer, setCustomer] = useState<Customer | null>(null);
+
+  // Resolve the correct Firestore collection for this user/guest
   const collectionName = useCustomerCollectionName();
 
+  // Load customer data when id or collection changes
   useEffect(() => {
     if (!id) return;
     (async () => {
@@ -25,15 +31,18 @@ export function CustomerDetailPage() {
     })();
   }, [id, collectionName]);
 
+  // Basic loading state while customer is fetched
   if (!customer) {
     return <div className="px-4 py-4">Kunde wird geladen...</div>;
   }
 
+  // Derive a human readable full name depending on customer type
   const fullName =
     customer.type === "company"
       ? customer.companyName
       : `${customer.firstName} ${customer.lastName}`;
 
+  // Fallback to "active" if no status is stored
   const currentStatus: CustomerStatus =
     customer.status ?? "active";
 
